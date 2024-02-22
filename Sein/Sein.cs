@@ -32,7 +32,6 @@ public class SeinMod : Mod
 
     public override void Initialize()
     {
-        AnimationOverride.AnimationOverriderAttacher.Hook();
         Hud.HudAttacher.Hook();
         Orb.Hook();
         Regenerate.Hook();
