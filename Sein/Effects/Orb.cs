@@ -1,7 +1,71 @@
-﻿using Sein.Util;
+﻿using Mono.Security.Protocol.Tls;
+using Sein.Util;
 using UnityEngine;
+using UnityEngine.Video;
 
 namespace Sein.Effects;
+
+internal class OrbParticle : MonoBehaviour
+{
+    private static IC.EmbeddedSprite SeinParticleSprite = new("SeinParticle");
+
+    public static OrbParticle Instantiate()
+    {
+        GameObject obj = new("SeinParticle");
+        obj.SetActive(false);
+        obj.AddComponent<SpriteRenderer>().sprite = SeinParticleSprite.Value;
+        return obj.AddComponent<OrbParticle>();
+    }
+
+    private static float INIT_SCALE = 1f;
+    private static float FLIGHT_DURATION = 0.65f;
+    private static float NOISE = 0.3f;
+
+    private ObjectPool<OrbParticle> pool;
+    private Vector3 start;
+    private Vector3 end;
+    private float time = 0;
+
+    public void Launch(ObjectPool<OrbParticle> pool, Vector3 start, Vector3 dist, float prewarm)
+    {
+        if (prewarm >= FLIGHT_DURATION)
+        {
+            pool.Return(this);
+            return;
+        }
+
+        start.x += Random.Range(-NOISE, NOISE);
+        start.y += Random.Range(-NOISE, NOISE);
+
+        this.pool = pool;
+        this.start = start;
+        this.end = start + dist;
+        this.time = prewarm;
+
+        transform.position = start + (end - start) * prewarm;
+        transform.localScale = new(INIT_SCALE, INIT_SCALE, 1);
+        gameObject.SetActive(true);
+    }
+
+    private void Update()
+    {
+        time += Time.deltaTime;
+        if (time >= FLIGHT_DURATION)
+        {
+            gameObject.SetActive(false);
+            pool.Return(this);
+            return;
+        }
+
+        float prog = time / FLIGHT_DURATION;
+        float rProg = 1 - prog;
+        float sqProg = 1 - rProg * rProg;
+        float scale = INIT_SCALE * (1 - prog);
+
+        transform.position = start + (end - start) * sqProg;
+        transform.localScale = new(scale, scale, 1);
+    }
+}
 
 internal class Orb : MonoBehaviour
 {
@@ -98,6 +162,50 @@ internal class Orb : MonoBehaviour
         return dist.normalized * targetVel;
     }
 
+    private static float VEL_MULTIPLIER = 0.25f;
+    private static float VEL_CAP = 10;
+    private static float DIST_MAX = 0.75f;
+    private static float TIME_MAX = 0.5f;
+
+    private ObjectPool<OrbParticle> particlePool = new(OrbParticle.Instantiate);
+    private float particleProgress = 0;
+
+    private void Travel(Vector3 velocity, float time)
+    {
+        var dist = velocity * time;
+        var finalPos = transform.position + dist;
+
+        float budget = dist.magnitude / DIST_MAX + time / TIME_MAX;
+        float rate = budget / time;
+        var pos = transform.position;
+
+        float elapsed = 0;
+        while (true)
+        {
+            float rem = 1 - particleProgress;
+            if (budget >= rem)
+            {
+                budget -= rem;
+                particleProgress = 0;
+
+                var timeDelta = rem / rate;
+                elapsed += timeDelta;
+                pos += timeDelta * velocity;
+
+                var vel = velocity * VEL_MULTIPLIER;
+                if (vel.magnitude > VEL_CAP) vel = vel.normalized * VEL_CAP;
+                particlePool.Lease().Launch(particlePool, pos, vel, elapsed);
+            }
+            else
+            {
+                particleProgress += budget;
+                break;
+            }
+        }
+
+        transform.position = finalPos;
+    }
+
     private void AccelerateTo(Vector3 target)
     {
         var targetVel = ComputeTargetVelocity(target);
@@ -106,27 +214,50 @@ internal class Orb : MonoBehaviour
         if (dist.magnitude <= ACCEL * Time.deltaTime) newVelocity = targetVel;
         else newVelocity = prevVelocity + dist.normalized * ACCEL * Time.deltaTime;
 
-        var travel = (newVelocity + prevVelocity) / 2 * Time.deltaTime;
-        transform.position += travel;
+        var velocity = (newVelocity + prevVelocity) / 2;
+        Travel(velocity, Time.deltaTime);
         prevVelocity = newVelocity;
     }
 
     private static int WAIT_FRAMES = 2;
     private int waited = 0;
 
-    protected void Update()
+    private bool WaitFrames()
     {
-        if (GameManager.instance.isPaused) return;
-
-        if (++waited <= WAIT_FRAMES) return;
-        if (waited == WAIT_FRAMES + 1)
+        if (waited == WAIT_FRAMES + 1) return true;
+        else if (++waited <= WAIT_FRAMES) return false;
+        else
         {
             prevTarget = KnightPos;
             transform.position = TargetPos;
+            return true;
         }
+    }
 
+    private void DoAccelerate()
+    {
         var newTarget = ComputeNewTarget();
         AccelerateTo(newTarget);
         prevTarget = newTarget;
+    }
+
+    private static float ROTATE_TIMER = 0.15f;
+    private float rotateTimer = 0;
+
+    private void DoRotate()
+    {
+        rotateTimer += Time.deltaTime;
+        if (rotateTimer < ROTATE_TIMER) return;
+
+        while (rotateTimer >= ROTATE_TIMER) rotateTimer -= ROTATE_TIMER;
+        transform.localRotation = Quaternion.Euler(0, 0, Random.Range(0, 360));
+    }
+
+    protected void Update()
+    {
+        if (!WaitFrames()) return;
+
+        DoAccelerate();
+        DoRotate();
     }
 }
