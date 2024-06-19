@@ -52,16 +52,18 @@ internal class SpiritLightHud : MonoBehaviour
     }
 
     private const int MAX_GEO = 20000;
-    private static float MIN_SCALE = 0.1f;
+    private static float MIN_SCALE = 0.05f;
+    private static float SCALE_POW = 0.9f;
     private static float ROT_SPEED = 30;
 
     private float GetGeoScale(int counter)
     {
         if (counter >= MAX_GEO) return 1;
-        if (counter <= 1) return 0.1f;
+        else if (counter == 0) return 0.01f;
+        else if (counter == 1) return MIN_SCALE;
 
         float log = Mathf.Log(counter) / Mathf.Log(MAX_GEO);
-        float p = Mathf.Pow(log, 0.75f);
+        float p = Mathf.Pow(log, SCALE_POW);
         return MIN_SCALE + p * (1 - MIN_SCALE);
     }
 
