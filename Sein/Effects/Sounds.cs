@@ -12,6 +12,7 @@ internal static class Sounds
 {
     private static Assembly asm = typeof(Sounds).Assembly;
     private static AudioClip dash = LoadAudioClip("dash");
+    private static List<AudioClip> doubleJumps = [LoadAudioClip("doubleJumpA"), LoadAudioClip("doubleJumpB")];
     private static AudioClip shadowDash = LoadAudioClip("shadowDash");
     private static AudioClip sharpShadowDash = LoadAudioClip("sharpShadowDash");
 
@@ -21,13 +22,32 @@ internal static class Sounds
         return SFCore.Utils.WavUtils.ToAudioClip(s, name);
     }
 
+    private static ILHook doDoubleJumpHook;
     private static ILHook heroDashHook;
     private static ILHook playSoundHook;
 
     public static void Hook()
     {
+        doDoubleJumpHook = HookOrig<HeroController>(OverrideDoDoubleJump, "DoDoubleJump", BindingFlags.NonPublic | BindingFlags.Instance);
         heroDashHook = HookOrig<HeroController>(OverrideHeroDash, "HeroDash", BindingFlags.NonPublic | BindingFlags.Instance);
         playSoundHook = HookOrig<HeroAudioController>(OverridePlaySound, "PlaySound", BindingFlags.Public | BindingFlags.Instance);
+    }
+
+    private static void OverrideDoDoubleJump(ILContext ctx)
+    {
+        ILCursor cursor = new(ctx);
+
+        cursor.GotoNext(i => i.MatchCallvirt<ParticleSystem>("Play"));
+        cursor.Remove();
+        cursor.EmitDelegate(MaybePlayParticleSystem);
+        cursor.GotoNext(MoveType.After, i => i.MatchLdfld<HeroController>("doubleJumpClip"));
+        cursor.EmitDelegate(OverrideAudioClip(doubleJumps));
+    }
+
+    private static void MaybePlayParticleSystem(ParticleSystem sys)
+    {
+        if (SeinMod.OriActive()) return;
+        sys.Play();
     }
 
     private static void OverrideHeroDash(ILContext ctx)
@@ -35,9 +55,9 @@ internal static class Sounds
         ILCursor cursor = new(ctx);
 
         cursor.GotoNext(MoveType.After, i => i.MatchLdfld<HeroController>("sharpShadowClip"));
-        cursor.EmitDelegate(OverrideAudioClip(sharpShadowDash));
+        cursor.EmitDelegate(OverrideAudioClip([sharpShadowDash]));
         cursor.GotoNext(MoveType.After, i => i.MatchLdfld<HeroController>("shadowDashClip"));
-        cursor.EmitDelegate(OverrideAudioClip(shadowDash));
+        cursor.EmitDelegate(OverrideAudioClip([shadowDash]));
     }
 
     private static void OverridePlaySound(ILContext ctx)
@@ -45,27 +65,28 @@ internal static class Sounds
         ILCursor cursor = new(ctx);
 
         cursor.GotoNext(MoveType.After, i => i.MatchLdfld<HeroAudioController>("dash"));
-        cursor.EmitDelegate(OverrideAudioSource("dash", dash));
+        cursor.EmitDelegate(OverrideAudioSource("dash", [dash]));
     }
 
-    private static Func<AudioClip, AudioClip> OverrideAudioClip(AudioClip replacement)
+    private static Func<AudioClip, AudioClip> OverrideAudioClip(List<AudioClip> replacements)
     {
         AudioClip Replace(AudioClip orig)
         {
-            return SeinMod.OriActive() ? replacement : orig;
+            return SeinMod.OriActive() ? replacements[UnityEngine.Random.Range(0, replacements.Count)] : orig;
         }
 
         return Replace;
+
     }
 
     private static Dictionary<string, AudioClip> originals = new();
 
-    private static Func<AudioSource, AudioSource> OverrideAudioSource(string name, AudioClip replacement)
+    private static Func<AudioSource, AudioSource> OverrideAudioSource(string name, List<AudioClip> replacements)
     {
         AudioSource Replace(AudioSource orig)
         {
             if (!originals.ContainsKey(name)) originals.Add(name, orig.clip);
-            orig.clip = SeinMod.OriActive() ? replacement : originals[name];
+            orig.clip = SeinMod.OriActive() ? replacements[UnityEngine.Random.Range(0, replacements.Count)] : originals[name];
 
             return orig;
         }
