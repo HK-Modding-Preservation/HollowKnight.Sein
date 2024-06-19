@@ -36,5 +36,6 @@ public class SeinMod : Mod
         Orb.Hook();
         Regenerate.Hook();
         SkinWatcher.Hook();
+        Sounds.Hook();
     }
 }

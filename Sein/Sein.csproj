@@ -48,6 +48,7 @@
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Resources\**\*.png" />
+    <EmbeddedResource Include="Resources\**\*.wav" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="Assembly-CSharp">
@@ -94,6 +95,9 @@
     </Reference>
     <Reference Include="PurenailCore">
       <HintPath>$(HollowKnightRefs)/Mods/PurenailCore/PurenailCore.dll</HintPath>
+    </Reference>
+    <Reference Include="SFCore">
+      <HintPath>$(HollowKnightRefs)/Mods/SFCore/SFCore.dll</HintPath>
     </Reference>
     <Reference Include="System.ComponentModel.Composition">
       <HintPath>$(HollowKnightRefs)/System.ComponentModel.Composition.dll</HintPath>
@@ -328,6 +332,9 @@
     </Reference>
     <Reference Include="UnityEngine.XRModule">
       <HintPath>$(HollowKnightRefs)/UnityEngine.XRModule.dll</HintPath>
+    </Reference>
+    <Reference Include="WavLib">
+      <HintPath>$(HollowKnightRefs)/Mods/SFCore/WavLib.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
