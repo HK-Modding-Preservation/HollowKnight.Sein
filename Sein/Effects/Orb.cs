@@ -18,6 +18,7 @@ internal class OrbParticle : MonoBehaviour
 
         var spriteRenderer = obj.AddComponent<SpriteRenderer>(); 
         spriteRenderer.sprite = SeinParticleSprite.Value;
+        spriteRenderer.sortingOrder = -1;
 
         var orbParticle = obj.AddComponent<OrbParticle>();
         orbParticle.spriteRenderer = spriteRenderer;
@@ -78,10 +79,7 @@ internal class OrbParticle : MonoBehaviour
 
 internal class Orb : MonoBehaviour
 {
-    public static void Hook()
-    {
-        SceneHooks.Hook(InstantiateOrb);
-    }
+    public static void Hook() => SceneHooks.Hook(InstantiateOrb);
 
     private static IC.EmbeddedSprite SeinSprite = new("Sein");
 
@@ -93,9 +91,9 @@ internal class Orb : MonoBehaviour
         orb.AddComponent<Orb>();
         orb.transform.localScale = new(SCALE, SCALE, 1);
 
-        // TODO: Animation
-        var sr = orb.AddComponent<SpriteRenderer>();
-        sr.sprite = SeinSprite.Value;
+        var spriteRenderer = orb.AddComponent<SpriteRenderer>();
+        spriteRenderer.sprite = SeinSprite.Value;
+        spriteRenderer.sortingOrder = 0;
     }
 
     private static float SCALE = 0.6f;
