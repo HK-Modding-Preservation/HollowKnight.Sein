@@ -9,12 +9,19 @@ internal class OrbParticle : MonoBehaviour
 {
     private static IC.EmbeddedSprite SeinParticleSprite = new("SeinParticle");
 
+    private SpriteRenderer spriteRenderer;
+
     public static OrbParticle Instantiate()
     {
         GameObject obj = new("SeinParticle");
         obj.SetActive(false);
-        obj.AddComponent<SpriteRenderer>().sprite = SeinParticleSprite.Value;
-        return obj.AddComponent<OrbParticle>();
+
+        var spriteRenderer = obj.AddComponent<SpriteRenderer>(); 
+        spriteRenderer.sprite = SeinParticleSprite.Value;
+
+        var orbParticle = obj.AddComponent<OrbParticle>();
+        orbParticle.spriteRenderer = spriteRenderer;
+        return orbParticle;
     }
 
     private static float INIT_SCALE = 1f;
@@ -64,6 +71,8 @@ internal class OrbParticle : MonoBehaviour
 
         transform.position = start + (end - start) * sqProg;
         transform.localScale = new(scale, scale, 1);
+
+        spriteRenderer.SetAlpha(Mathf.Sqrt(rProg));
     }
 }
 
