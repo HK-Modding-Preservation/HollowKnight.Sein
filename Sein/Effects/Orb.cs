@@ -16,7 +16,7 @@ internal class OrbParticle : MonoBehaviour
 
         var spriteRenderer = obj.AddComponent<SpriteRenderer>(); 
         spriteRenderer.sprite = SeinParticleSprite.Value;
-        spriteRenderer.sortingOrder = -1;
+        spriteRenderer.sortingOrder = 0;
 
         var orbParticle = obj.AddComponent<OrbParticle>();
         orbParticle.spriteRenderer = spriteRenderer;
@@ -25,7 +25,7 @@ internal class OrbParticle : MonoBehaviour
 
     private static float INIT_SCALE = 1f;
     private static float FLIGHT_DURATION = 0.65f;
-    private static float NOISE = 0.3f;
+    private static float NOISE = 0.25f;
 
     private ObjectPool<OrbParticle> pool;
     private Vector3 start;
@@ -40,8 +40,8 @@ internal class OrbParticle : MonoBehaviour
             return;
         }
 
-        start.x += Random.Range(-NOISE, NOISE);
-        start.y += Random.Range(-NOISE, NOISE);
+        var noise = Quaternion.Euler(0, 0, Random.Range(0f, 360f)) * new Vector3(Mathf.Sqrt(Random.Range(0, NOISE * NOISE)), 0, 0);
+        start += noise;
 
         this.pool = pool;
         this.start = start;
@@ -52,6 +52,8 @@ internal class OrbParticle : MonoBehaviour
         transform.localScale = new(INIT_SCALE, INIT_SCALE, 1);
         gameObject.SetActive(true);
     }
+
+    private static float ALPHA_FADE_IN = 0.25f;
 
     private void Update()
     {
@@ -71,7 +73,8 @@ internal class OrbParticle : MonoBehaviour
         transform.position = start + (end - start) * sqProg;
         transform.localScale = new(scale, scale, 1);
 
-        spriteRenderer.SetAlpha(Mathf.Sqrt(rProg));
+        float alphaRProg = prog > ALPHA_FADE_IN ? (1 - (prog - ALPHA_FADE_IN) / (1 - ALPHA_FADE_IN)) : ((ALPHA_FADE_IN - prog) / ALPHA_FADE_IN);
+        spriteRenderer.SetAlpha(Mathf.Sqrt(alphaRProg));
     }
 }
 
@@ -91,7 +94,7 @@ internal class Orb : MonoBehaviour
 
         var spriteRenderer = orb.AddComponent<SpriteRenderer>();
         spriteRenderer.sprite = SeinSprite.Value;
-        spriteRenderer.sortingOrder = 0;
+        spriteRenderer.sortingOrder = 1;
     }
 
     private static float SCALE = 0.6f;
@@ -169,8 +172,8 @@ internal class Orb : MonoBehaviour
 
     private static float VEL_MULTIPLIER = 0.1f;
     private static float VEL_CAP = 2.5f;
-    private static float DIST_MAX = 0.1f;
-    private static float TIME_MAX = 0.25f;
+    private static float DIST_MAX = 0.075f;
+    private static float TIME_MAX = 0.15f;
 
     private ObjectPool<OrbParticle> particlePool = new(OrbParticle.Instantiate);
     private float particleProgress = 0;

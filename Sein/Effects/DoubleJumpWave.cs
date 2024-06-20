@@ -7,7 +7,7 @@ internal class DoubleJumpWave : MonoBehaviour
     private static IC.EmbeddedSprite WaveSprite = new("djumpwave");
 
     private static float SPEED = 19;
-    private static float ANGLE_BASE = 17;
+    private static float ANGLE_BASE = 18.5f;
     private static float SPAWN_OFFSET = 1.1f;
     private static float LIFETIME = 0.225f;
     private static float SCALE_MULT = 0.65f;
