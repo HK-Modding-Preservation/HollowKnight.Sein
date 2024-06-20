@@ -162,10 +162,10 @@ internal class Orb : MonoBehaviour
         return dist.normalized * targetVel;
     }
 
-    private static float VEL_MULTIPLIER = 0.25f;
-    private static float VEL_CAP = 10;
-    private static float DIST_MAX = 0.75f;
-    private static float TIME_MAX = 0.5f;
+    private static float VEL_MULTIPLIER = 0.1f;
+    private static float VEL_CAP = 2.5f;
+    private static float DIST_MAX = 0.1f;
+    private static float TIME_MAX = 0.25f;
 
     private ObjectPool<OrbParticle> particlePool = new(OrbParticle.Instantiate);
     private float particleProgress = 0;
