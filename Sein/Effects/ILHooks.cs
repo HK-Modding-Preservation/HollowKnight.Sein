@@ -8,9 +8,9 @@ using UnityEngine;
 
 namespace Sein.Effects;
 
-internal static class Sounds
+internal static class ILHooks
 {
-    private static Assembly asm = typeof(Sounds).Assembly;
+    private static Assembly asm = typeof(ILHooks).Assembly;
     private static AudioClip dash = LoadAudioClip("dash");
     private static List<AudioClip> doubleJumps = [LoadAudioClip("doubleJumpA"), LoadAudioClip("doubleJumpB")];
     private static AudioClip shadowDash = LoadAudioClip("shadowDash");
@@ -31,6 +31,8 @@ internal static class Sounds
         doDoubleJumpHook = HookOrig<HeroController>(OverrideDoDoubleJump, "DoDoubleJump", BindingFlags.NonPublic | BindingFlags.Instance);
         heroDashHook = HookOrig<HeroController>(OverrideHeroDash, "HeroDash", BindingFlags.NonPublic | BindingFlags.Instance);
         playSoundHook = HookOrig<HeroAudioController>(OverridePlaySound, "PlaySound", BindingFlags.Public | BindingFlags.Instance);
+
+        On.HeroController.DoDoubleJump += SpawnDoubleJumpWave;
     }
 
     private static void OverrideDoDoubleJump(ILContext ctx)
@@ -48,6 +50,15 @@ internal static class Sounds
     {
         if (SeinMod.OriActive()) return;
         sys.Play();
+    }
+
+    private static void SpawnDoubleJumpWave(On.HeroController.orig_DoDoubleJump orig, HeroController self)
+    {
+        orig(self);
+        if (!SeinMod.OriActive()) return;
+
+        var r2d = self.gameObject.GetComponent<Rigidbody2D>();
+        DoubleJumpWave.Spawn(self.gameObject.transform.position, r2d.velocity.x);
     }
 
     private static void OverrideHeroDash(ILContext ctx)
