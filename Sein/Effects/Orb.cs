@@ -16,7 +16,6 @@ internal class OrbParticle : MonoBehaviour
 
         var spriteRenderer = obj.AddComponent<SpriteRenderer>(); 
         spriteRenderer.sprite = SeinParticleSprite.Value;
-        spriteRenderer.sortingOrder = 0;
 
         var orbParticle = obj.AddComponent<OrbParticle>();
         orbParticle.spriteRenderer = spriteRenderer;
@@ -42,6 +41,7 @@ internal class OrbParticle : MonoBehaviour
 
         var noise = Quaternion.Euler(0, 0, Random.Range(0f, 360f)) * new Vector3(Mathf.Sqrt(Random.Range(0, NOISE * NOISE)), 0, 0);
         start += noise;
+        start.z = 0.01f;
 
         this.pool = pool;
         this.start = start;
@@ -94,11 +94,9 @@ internal class Orb : MonoBehaviour
 
         var spriteRenderer = orb.AddComponent<SpriteRenderer>();
         spriteRenderer.sprite = SeinSprite.Value;
-        spriteRenderer.sortingOrder = 1;
     }
 
     private static float SCALE = 0.6f;
-    private static float Z = -0.01f;
     private static float ACCEL = 23.5f;
     private static float MAX_SPEED = 60f;
     private static float MAX_IDLE_VELOCITY = 5f;
@@ -107,7 +105,7 @@ internal class Orb : MonoBehaviour
     private static float Y_PERIOD = 1.25f;
     private static float X_RANGE = 0.85f;
     private static float X_PERIOD = 3.15f;
-    private static Vector3 TARGET_SIZE => new(X_RANGE * 2, Y_RANGE * 2, 2 * Z);
+    private static Vector3 TARGET_SIZE => new(X_RANGE * 2, Y_RANGE * 2, 0);
     private static float MAX_BRAKE_DISTANCE = MAX_SPEED * MAX_SPEED / (2 * ACCEL);
 
     private HeroController controller;
@@ -121,7 +119,7 @@ internal class Orb : MonoBehaviour
 
     private Vector3 KnightPos => knight.transform.position;
 
-    private Vector3 TargetPos => KnightPos + new Vector3(0, Y_OFFSET, Z);
+    private Vector3 TargetPos => KnightPos + new Vector3(0, Y_OFFSET, 0);
 
     private float xTimer = 0;
     private float yTimer = 0;
@@ -137,7 +135,7 @@ internal class Orb : MonoBehaviour
         var center = TargetPos;
         var newX = center.x + X_RANGE * Mathf.Sin(2 * xTimer * Mathf.PI / X_PERIOD);
         var newY = center.y + Y_RANGE * Mathf.Cos(2 * yTimer * Mathf.PI / Y_PERIOD);
-        Vector3 newTarget = new(newX, newY, Z);
+        Vector3 newTarget = new(newX, newY, 0);
 
         var diff = newTarget - prevTarget;
         if (diff.sqrMagnitude > MAX_IDLE_VELOCITY * MAX_IDLE_VELOCITY)
