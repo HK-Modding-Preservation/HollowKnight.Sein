@@ -11,8 +11,10 @@ namespace Sein.Effects;
 internal static class ILHooks
 {
     private static Assembly asm = typeof(ILHooks).Assembly;
+
     private static AudioClip dash = LoadAudioClip("dash");
     private static List<AudioClip> doubleJumps = [LoadAudioClip("doubleJumpA"), LoadAudioClip("doubleJumpB")];
+    private static List<AudioClip> geoCollects = [LoadAudioClip("geoCollectA"), LoadAudioClip("geoCollectB"), LoadAudioClip("geoCollectC")];
     private static AudioClip shadowDash = LoadAudioClip("shadowDash");
     private static AudioClip sharpShadowDash = LoadAudioClip("sharpShadowDash");
 
@@ -32,6 +34,7 @@ internal static class ILHooks
         heroDashHook = HookOrig<HeroController>(OverrideHeroDash, "HeroDash", BindingFlags.NonPublic | BindingFlags.Instance);
         playSoundHook = HookOrig<HeroAudioController>(OverridePlaySound, "PlaySound", BindingFlags.Public | BindingFlags.Instance);
 
+        On.GeoControl.OnEnable += ChangeGeoSounds;
         On.HeroController.DoDoubleJump += SpawnDoubleJumpWave;
     }
 
@@ -90,19 +93,29 @@ internal static class ILHooks
 
     }
 
-    private static Dictionary<string, AudioClip> originals = new();
+    private static Dictionary<string, AudioClip> origAudioClips = new();
 
     private static Func<AudioSource, AudioSource> OverrideAudioSource(string name, List<AudioClip> replacements)
     {
         AudioSource Replace(AudioSource orig)
         {
-            if (!originals.ContainsKey(name)) originals.Add(name, orig.clip);
-            orig.clip = SeinMod.OriActive() ? replacements[UnityEngine.Random.Range(0, replacements.Count)] : originals[name];
+            if (!origAudioClips.ContainsKey(name)) origAudioClips.Add(name, orig.clip);
+            orig.clip = SeinMod.OriActive() ? replacements[UnityEngine.Random.Range(0, replacements.Count)] : origAudioClips[name];
 
             return orig;
         }
 
         return Replace;
+    }
+
+    private static Dictionary<string, AudioClip[]> origAudioClipArrays = new();
+
+    private static void ChangeGeoSounds(On.GeoControl.orig_OnEnable orig, GeoControl self)
+    {
+        if (!origAudioClipArrays.ContainsKey("geo")) origAudioClipArrays.Add("geo", self.pickupSounds);
+        self.pickupSounds = SeinMod.OriActive() ? geoCollects.ToArray() : origAudioClipArrays["geo"];
+
+        orig(self);
     }
 
     private static ILHook HookOrig<T>(ILContext.Manipulator hook, string name, BindingFlags flags)
