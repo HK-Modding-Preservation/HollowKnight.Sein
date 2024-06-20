@@ -25,6 +25,7 @@ internal class OrbParticle : MonoBehaviour
     private static float INIT_SCALE = 1f;
     private static float FLIGHT_DURATION = 0.65f;
     private static float NOISE = 0.25f;
+    private static float Z_OFFSET = -0.01f;
 
     private ObjectPool<OrbParticle> pool;
     private Vector3 start;
@@ -41,7 +42,7 @@ internal class OrbParticle : MonoBehaviour
 
         var noise = Quaternion.Euler(0, 0, Random.Range(0f, 360f)) * new Vector3(Mathf.Sqrt(Random.Range(0, NOISE * NOISE)), 0, 0);
         start += noise;
-        start.z = 0.01f;
+        start.z = Z_OFFSET;
 
         this.pool = pool;
         this.start = start;
@@ -105,6 +106,7 @@ internal class Orb : MonoBehaviour
     private static float Y_PERIOD = 1.25f;
     private static float X_RANGE = 0.85f;
     private static float X_PERIOD = 3.15f;
+    private static float Z_OFFSET = -0.02f;
     private static Vector3 TARGET_SIZE => new(X_RANGE * 2, Y_RANGE * 2, 0);
     private static float MAX_BRAKE_DISTANCE = MAX_SPEED * MAX_SPEED / (2 * ACCEL);
 
@@ -119,7 +121,7 @@ internal class Orb : MonoBehaviour
 
     private Vector3 KnightPos => knight.transform.position;
 
-    private Vector3 TargetPos => KnightPos + new Vector3(0, Y_OFFSET, 0);
+    private Vector3 TargetPos => KnightPos + new Vector3(0, Y_OFFSET, Z_OFFSET);
 
     private float xTimer = 0;
     private float yTimer = 0;
@@ -135,7 +137,7 @@ internal class Orb : MonoBehaviour
         var center = TargetPos;
         var newX = center.x + X_RANGE * Mathf.Sin(2 * xTimer * Mathf.PI / X_PERIOD);
         var newY = center.y + Y_RANGE * Mathf.Cos(2 * yTimer * Mathf.PI / Y_PERIOD);
-        Vector3 newTarget = new(newX, newY, 0);
+        Vector3 newTarget = new(newX, newY, Z_OFFSET);
 
         var diff = newTarget - prevTarget;
         if (diff.sqrMagnitude > MAX_IDLE_VELOCITY * MAX_IDLE_VELOCITY)
