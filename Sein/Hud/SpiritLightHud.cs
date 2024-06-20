@@ -16,14 +16,8 @@ internal class SpiritLightHudParticle : MonoBehaviour
 
     public static SpiritLightHudParticle Instantiate()
     {
-        GameObject obj = new("SpiritLightHudParticle");
-        obj.layer = (int)PhysLayers.UI;
+        var (obj, spriteRenderer) = UISprites.CreateUISprite("SpiritLightHUDParticle", sprite.Value, 1);
         obj.SetActive(false);
-
-        var spriteRenderer = obj.AddComponent<SpriteRenderer>();
-        spriteRenderer.sprite = sprite.Value;
-        spriteRenderer.sortingLayerName = "Over";
-        spriteRenderer.sortingOrder = 1;
 
         var hudParticle = obj.AddComponent<SpiritLightHudParticle>();
         hudParticle.spriteRenderer = spriteRenderer;
@@ -205,12 +199,8 @@ internal class SpiritLightHud : MonoBehaviour
 
     private GameObject AddSprite(string name, Sprite sprite, int sortOrder)
     {
-        GameObject obj = new(name);
-        obj.layer = (int)PhysLayers.UI;
-        var renderer = obj.AddComponent<SpriteRenderer>();
-        renderer.sprite = sprite;
-        renderer.sortingLayerName = "Over";
-        renderer.sortingOrder = sortOrder;
+        var (obj, _) = UISprites.CreateUISprite(name, sprite, sortOrder);
+
         obj.transform.SetParent(spriteContainer.transform);
         obj.transform.localScale = new(1, 1, 1);
         obj.transform.localPosition = Vector3.zero;
