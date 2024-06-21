@@ -80,7 +80,7 @@ internal class SpiritLightParticleFactory : UIParticleFactory<SpiritLightParticl
 
 internal class SpiritLightParticle : AbstractParticle<SpiritLightParticleFactory, SpiritLightParticle>
 {
-    private const float SCALE_BASE = 1f;
+    private const float SCALE_BASE = 1.2f;
     private const float FLIGHT_DISTANCE = 1.1f;
     private const float FLIGHT_SPEED = 0.225f;
     internal const float FLIGHT_TIME = FLIGHT_DISTANCE / FLIGHT_SPEED;
@@ -117,9 +117,9 @@ internal class SpiritLightParticle : AbstractParticle<SpiritLightParticleFactory
 internal class SpiritParticleUpdater
 {
     private const int SPINDLES = 5;
-    private const float REVOLUTION_TIME = 14;
+    private const float REVOLUTION_TIME = 15;
     private const float ROT_SPEED = 360f / REVOLUTION_TIME;
-    private const float PARTICLES_PER_SECOND = 4.5f;
+    private const float PARTICLES_PER_SECOND = 4.75f;
     private const int MIN_TICKS = 110;
     private const int MAX_TICKS = 140;
     private static readonly int TICKS_PER_REVOLUTION = Mathf.FloorToInt(REVOLUTION_TIME * PARTICLES_PER_SECOND * (MIN_TICKS + MAX_TICKS) / 2);
@@ -210,19 +210,16 @@ internal class SpiritLightHud : MonoBehaviour
     }
 
     private const int MAX_GEO = 20000;
-    private const int MIN_GEO = 10;
     private static float MIN_SCALE = 0.05f;
-    private static float SCALE_POW = 0.9f;
-    private static float ROT_SPEED = 30;
+    private static float MAX_SCALE = 1.45f;
 
     private float GetGeoScale(int counter)
     {
-        if (counter >= MAX_GEO) return 1;
-        else if (counter <= MIN_GEO + 1) return MIN_SCALE;
+        if (counter >= MAX_GEO) return MAX_SCALE;
+        else if (counter <= 1) return MIN_SCALE;
 
-        float log = Mathf.Log(counter - MIN_GEO) / Mathf.Log(MAX_GEO - MIN_GEO);
-        float p = Mathf.Pow(log, SCALE_POW);
-        return MIN_SCALE + p * (1 - MIN_SCALE);
+        float p = Mathf.Pow(Mathf.Sqrt(50 * counter) / 1000, 0.65f);
+        return MIN_SCALE + p * (MAX_SCALE - MIN_SCALE);
     }
 
     private float scale = MIN_SCALE;
