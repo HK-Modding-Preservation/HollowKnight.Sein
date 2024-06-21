@@ -3,79 +3,42 @@ using UnityEngine;
 
 namespace Sein.Effects;
 
-internal class OrbParticle : MonoBehaviour
+internal class OrbParticleFactory : AbstractParticleFactory<OrbParticleFactory, OrbParticle>
 {
-    private static IC.EmbeddedSprite SeinParticleSprite = new("SeinParticle");
-
-    private SpriteRenderer spriteRenderer;
-
-    public static OrbParticle Instantiate()
-    {
-        GameObject obj = new("SeinParticle");
-        obj.SetActive(false);
-
-        var spriteRenderer = obj.AddComponent<SpriteRenderer>(); 
-        spriteRenderer.sprite = SeinParticleSprite.Value;
-
-        var orbParticle = obj.AddComponent<OrbParticle>();
-        orbParticle.spriteRenderer = spriteRenderer;
-        return orbParticle;
-    }
-
     private static float INIT_SCALE = 1f;
     private static float FLIGHT_DURATION = 0.65f;
     private static float NOISE = 0.25f;
     private static float Z_OFFSET = -0.01f;
 
-    private ObjectPool<OrbParticle> pool;
-    private Vector3 start;
-    private Vector3 end;
-    private float time = 0;
+    private static IC.EmbeddedSprite sprite = new("SeinParticle");
 
-    public void Launch(ObjectPool<OrbParticle> pool, Vector3 start, Vector3 dist, float prewarm)
+    protected override string GetObjectName() => "SeinParticle";
+
+    protected override Sprite GetSprite() => sprite.Value;
+
+    public void Launch(float prewarm, Vector3 start, Vector3 dist)
     {
-        if (prewarm >= FLIGHT_DURATION)
-        {
-            pool.Return(this);
-            return;
-        }
+        if (!Launch(prewarm, FLIGHT_DURATION, out OrbParticle particle)) return;
 
         var noise = Quaternion.Euler(0, 0, Random.Range(0f, 360f)) * new Vector3(Mathf.Sqrt(Random.Range(0, NOISE * NOISE)), 0, 0);
         start += noise;
         start.z = Z_OFFSET;
+        Vector3 scale = new(INIT_SCALE, INIT_SCALE, 1);
 
-        this.pool = pool;
-        this.start = start;
-        this.end = start + dist;
-        this.time = prewarm;
-
-        transform.position = start + (end - start) * prewarm;
-        transform.localScale = new(INIT_SCALE, INIT_SCALE, 1);
-        gameObject.SetActive(true);
+        particle.SetParams(start, start + dist, scale, scale, 0, 0);
     }
+}
+
+internal class OrbParticle : LinearParticle<OrbParticleFactory, OrbParticle>
+{
+    protected override OrbParticle Self() => this;
 
     private static float ALPHA_FADE_IN = 0.25f;
 
-    private void Update()
+    protected override float GetAlpha()
     {
-        time += Time.deltaTime;
-        if (time >= FLIGHT_DURATION)
-        {
-            gameObject.SetActive(false);
-            pool.Return(this);
-            return;
-        }
-
-        float prog = time / FLIGHT_DURATION;
-        float rProg = 1 - prog;
-        float sqProg = 1 - rProg * rProg;
-        float scale = INIT_SCALE * (1 - prog);
-
-        transform.position = start + (end - start) * sqProg;
-        transform.localScale = new(scale, scale, 1);
-
-        float alphaRProg = prog > ALPHA_FADE_IN ? (1 - (prog - ALPHA_FADE_IN) / (1 - ALPHA_FADE_IN)) : ((ALPHA_FADE_IN - prog) / ALPHA_FADE_IN);
-        spriteRenderer.SetAlpha(Mathf.Sqrt(alphaRProg));
+        float alphaRProg = Progress > ALPHA_FADE_IN ? (1 - (Progress - ALPHA_FADE_IN) / (1 - ALPHA_FADE_IN)) : ((ALPHA_FADE_IN - Progress) / ALPHA_FADE_IN);
+        return Mathf.Sqrt(alphaRProg);
     }
 }
 
@@ -175,7 +138,7 @@ internal class Orb : MonoBehaviour
     private static float DIST_MAX = 0.075f;
     private static float TIME_MAX = 0.15f;
 
-    private ObjectPool<OrbParticle> particlePool = new(OrbParticle.Instantiate);
+    private OrbParticleFactory orbParticleFactory = new();
     private float particleProgress = 0;
 
     private void Travel(Vector3 velocity, float time)
@@ -202,7 +165,7 @@ internal class Orb : MonoBehaviour
 
                 var vel = velocity * VEL_MULTIPLIER;
                 if (vel.magnitude > VEL_CAP) vel = vel.normalized * VEL_CAP;
-                particlePool.Lease().Launch(particlePool, pos, vel, elapsed);
+                orbParticleFactory.Launch(elapsed, pos, vel);
             }
             else
             {

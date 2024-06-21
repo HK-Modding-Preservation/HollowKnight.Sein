@@ -1,5 +1,4 @@
-﻿using GlobalEnums;
-using ItemChanger.Extensions;
+﻿using ItemChanger.Extensions;
 using Sein.IC;
 using Sein.Util;
 using System.Collections.Generic;
@@ -8,75 +7,105 @@ using UnityEngine;
 
 namespace Sein.Hud;
 
-internal class SpiritLightHudParticle : MonoBehaviour
+internal class SpiritLightFrameParticleFactory : UIParticleFactory<SpiritLightFrameParticleFactory, SpiritLightFrameParticle>
+{
+    private static readonly EmbeddedSprite sprite = new("SpiritLightFrameParticle");
+
+    protected override string GetObjectName() => "SpiritLightFrameParticle";
+
+    protected override Sprite GetSprite() => sprite.Value;
+    public void Launch(float prewarm, Transform parent, float angle)
+    {
+        if (!Launch(prewarm, SpiritLightFrameParticle.FLIGHT_TIME, out var particle)) return;
+
+        particle.SetParams(angle);
+        particle.gameObject.transform.parent = parent;
+    }
+}
+
+internal class SpiritLightFrameParticle : AbstractParticle<SpiritLightFrameParticleFactory, SpiritLightFrameParticle>
+{
+    private const float FLIGHT_DISTANCE = 1.35f;
+    private const float FLIGHT_SPEED = 0.45f;
+    internal const float FLIGHT_TIME = FLIGHT_DISTANCE / FLIGHT_SPEED;
+    private const float SPAWN_RADIUS = 1.2f;
+
+    private float angle;
+
+    internal void SetParams(float angle) => this.angle = angle;
+
+    protected override bool UseLocalPos => true;
+
+    protected override Vector3 GetPos()
+    {
+        Vector3 fwd = new(SPAWN_RADIUS * FLIGHT_SPEED * Age, 0, 0);
+        return Quaternion.Euler(0, 0, angle) * fwd;
+    }
+
+    protected override Vector3 GetScale()
+    {
+        float scale = Mathf.Sqrt(RProgress);
+        return new(scale, scale, 1);
+    }
+
+    protected override float GetAlpha() => Mathf.Sqrt(RProgress);
+
+    protected override SpiritLightFrameParticle Self() => this;
+}
+
+internal class SpiritLightParticleFactory : UIParticleFactory<SpiritLightParticleFactory, SpiritLightParticle>
 {
     private static readonly EmbeddedSprite sprite = new("SpiritLightParticle");
 
-    private SpriteRenderer spriteRenderer;
+    protected override string GetObjectName() => "SpiritLightParticle";
 
-    public static SpiritLightHudParticle Instantiate()
+    protected override Sprite GetSprite() => sprite.Value;
+
+    protected override int SortingOrder => 1;
+
+    public void Launch(float prewarm, Transform parent, float angle, float scaleMult)
     {
-        var (obj, spriteRenderer) = UISprites.CreateUISprite("SpiritLightHUDParticle", sprite.Value, 1);
-        obj.SetActive(false);
+        if (!Launch(prewarm, SpiritLightParticle.FLIGHT_TIME, out var particle)) return;
 
-        var hudParticle = obj.AddComponent<SpiritLightHudParticle>();
-        hudParticle.spriteRenderer = spriteRenderer;
-        return hudParticle;
+        particle.gameObject.transform.parent = parent;
+        particle.SetParams(angle, scaleMult);
     }
+}
 
-    private static float SCALE_BASE = 1f;
-    private static float FLIGHT_DISTANCE = 1.1f;
-    private static float FLIGHT_SPEED = 0.225f;
-    private static float FLIGHT_TIME = FLIGHT_DISTANCE / FLIGHT_SPEED;
-    private static float SPAWN_RADIUS = 0.85f;
+internal class SpiritLightParticle : AbstractParticle<SpiritLightParticleFactory, SpiritLightParticle>
+{
+    private const float SCALE_BASE = 1f;
+    private const float FLIGHT_DISTANCE = 1.1f;
+    private const float FLIGHT_SPEED = 0.225f;
+    internal const float FLIGHT_TIME = FLIGHT_DISTANCE / FLIGHT_SPEED;
+    private const float SPAWN_RADIUS = 0.85f;
 
-    private ObjectPool<SpiritLightHudParticle> pool;
     private float angle;
     private float scaleMult;
-    private float age = 0;
 
-    public void Launch(ObjectPool<SpiritLightHudParticle> pool, Transform parent, float angle, float scaleMult, float prewarm)
+    internal void SetParams(float angle, float scaleMult)
     {
-        if (prewarm > FLIGHT_TIME)
-        {
-            pool.Return(this);
-            return;
-        }
-
-        this.pool = pool;
         this.angle = angle;
         this.scaleMult = scaleMult;
-        this.age = 0;
-
-        transform.parent = parent;
-        gameObject.SetActive(true);
-        Update(prewarm);
     }
 
-    private void Update() => Update(Time.deltaTime);
+    protected override bool UseLocalPos => true;
 
-    private void Update(float time)
+    protected override Vector3 GetPos()
     {
-        age += time;
-        if (age >= FLIGHT_TIME)
-        {
-            transform.parent = null;
-            gameObject.SetActive(false);
-
-            pool.Return(this);
-            return;
-        }
-
-        Vector3 fwd = new(scaleMult * (SPAWN_RADIUS + FLIGHT_SPEED * age), 0, 0);
-        transform.localPosition = Quaternion.Euler(0, 0, angle) * fwd;
-
-        float prog = age / FLIGHT_TIME;
-        float rProg = 1 - prog;
-        float scale = scaleMult * SCALE_BASE * Mathf.Sqrt(rProg);
-        transform.localScale = new(scale, scale, 1);
-
-        spriteRenderer.SetAlpha(Mathf.Sqrt(rProg));
+        Vector3 fwd = new(scaleMult * (SPAWN_RADIUS + FLIGHT_SPEED * Age), 0, 0);
+        return Quaternion.Euler(0, 0, angle) * fwd;
     }
+
+    protected override Vector3 GetScale()
+    {
+        var scale = scaleMult * SCALE_BASE * Mathf.Sqrt(RProgress);
+        return new(scale, scale, 1);
+    }
+
+    protected override float GetAlpha() => Mathf.Sqrt(RProgress);
+
+    protected override SpiritLightParticle Self() => this;
 }
 
 internal class SpiritParticleUpdater
@@ -89,7 +118,7 @@ internal class SpiritParticleUpdater
     private const int MAX_TICKS = 140;
     private static readonly int TICKS_PER_REVOLUTION = Mathf.FloorToInt(REVOLUTION_TIME * PARTICLES_PER_SECOND * (MIN_TICKS + MAX_TICKS) / 2);
 
-    private readonly ObjectPool<SpiritLightHudParticle> pool = new(SpiritLightHudParticle.Instantiate);
+    private readonly SpiritLightParticleFactory spiritLightParticleFactory = new();
     private readonly Transform parent;
     private readonly List<PeriodicFloatTicker> rotaryTickers = new();
 
@@ -110,8 +139,8 @@ internal class SpiritParticleUpdater
             float rotBase = rotation + i * 360f / rotaryTickers.Count;
             foreach (var used in rotaryTickers[i].TickFloats(time))
             {
-                float rot = rotBase + used * ROT_SPEED;
-                pool.Lease().Launch(pool, parent, rot, scaleMult, used);
+                float angle = rotBase + used * ROT_SPEED;
+                spiritLightParticleFactory.Launch(used, parent, angle, scaleMult);
             }
         }
 
