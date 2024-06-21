@@ -14,21 +14,26 @@ internal class SpiritLightFrameParticleFactory : UIParticleFactory<SpiritLightFr
     protected override string GetObjectName() => "SpiritLightFrameParticle";
 
     protected override Sprite GetSprite() => sprite.Value;
+
+    protected override int SortingOrder => -2;
+
     public void Launch(float prewarm, Transform parent, float angle)
     {
         if (!Launch(prewarm, SpiritLightFrameParticle.FLIGHT_TIME, out var particle)) return;
 
         particle.SetParams(angle);
         particle.gameObject.transform.parent = parent;
+        particle.Finalize(prewarm);
     }
 }
 
 internal class SpiritLightFrameParticle : AbstractParticle<SpiritLightFrameParticleFactory, SpiritLightFrameParticle>
 {
-    private const float FLIGHT_DISTANCE = 1.35f;
-    private const float FLIGHT_SPEED = 0.45f;
+    private const float FLIGHT_DISTANCE = 0.85f;
+    private const float FLIGHT_SPEED = 0.3f;
     internal const float FLIGHT_TIME = FLIGHT_DISTANCE / FLIGHT_SPEED;
-    private const float SPAWN_RADIUS = 1.2f;
+    private const float SPAWN_RADIUS = 2.05f;
+    private const float SCALE_BASE = 1.8f;
 
     private float angle;
 
@@ -38,13 +43,13 @@ internal class SpiritLightFrameParticle : AbstractParticle<SpiritLightFrameParti
 
     protected override Vector3 GetPos()
     {
-        Vector3 fwd = new(SPAWN_RADIUS * FLIGHT_SPEED * Age, 0, 0);
+        Vector3 fwd = new(SPAWN_RADIUS + FLIGHT_SPEED * Age, 0, 0);
         return Quaternion.Euler(0, 0, angle) * fwd;
     }
 
     protected override Vector3 GetScale()
     {
-        float scale = Mathf.Sqrt(RProgress);
+        float scale = SCALE_BASE * Mathf.Sqrt(RProgress);
         return new(scale, scale, 1);
     }
 
@@ -69,6 +74,7 @@ internal class SpiritLightParticleFactory : UIParticleFactory<SpiritLightParticl
 
         particle.gameObject.transform.parent = parent;
         particle.SetParams(angle, scaleMult);
+        particle.Finalize(prewarm);
     }
 }
 
@@ -118,26 +124,34 @@ internal class SpiritParticleUpdater
     private const int MAX_TICKS = 140;
     private static readonly int TICKS_PER_REVOLUTION = Mathf.FloorToInt(REVOLUTION_TIME * PARTICLES_PER_SECOND * (MIN_TICKS + MAX_TICKS) / 2);
 
+    private const float FRAME_PARTICLES_PER_SECOND = 15;
+    private static readonly int FRAME_TICKS_PER_SECOND = Mathf.FloorToInt(FRAME_PARTICLES_PER_SECOND * (MIN_TICKS + MAX_TICKS) / 2);
+
     private readonly SpiritLightParticleFactory spiritLightParticleFactory = new();
+    private readonly SpiritLightFrameParticleFactory spiritLightFrameParticleFactory = new();
     private readonly Transform parent;
-    private readonly List<PeriodicFloatTicker> rotaryTickers = new();
+    private readonly List<PeriodicFloatTicker> spiritLightTickers = new();
+    private readonly PeriodicFloatTicker frameTicker;
 
     internal SpiritParticleUpdater(Transform parent)
     {
         this.parent = parent;
 
-        rotaryTickers = new();
-        for (int i = 0; i < SPINDLES; i++) rotaryTickers.Add(new(REVOLUTION_TIME, TICKS_PER_REVOLUTION, MIN_TICKS, MAX_TICKS));
+        spiritLightTickers = new();
+        for (int i = 0; i < SPINDLES; i++) spiritLightTickers.Add(new(REVOLUTION_TIME, TICKS_PER_REVOLUTION, MIN_TICKS, MAX_TICKS));
+        frameTicker = new(1, FRAME_TICKS_PER_SECOND, MIN_TICKS, MAX_TICKS);
     }
 
     private float rotation = 0;
 
     public void Update(float time, float scaleMult)
     {
-        for (int i = 0; i < rotaryTickers.Count; i++)
+        foreach (var used in frameTicker.TickFloats(time)) spiritLightFrameParticleFactory.Launch(used, parent, Random.Range(0f, 360f));
+
+        for (int i = 0; i < spiritLightTickers.Count; i++)
         {
-            float rotBase = rotation + i * 360f / rotaryTickers.Count;
-            foreach (var used in rotaryTickers[i].TickFloats(time))
+            float rotBase = rotation + i * 360f / spiritLightTickers.Count;
+            foreach (var used in spiritLightTickers[i].TickFloats(time))
             {
                 float angle = rotBase + used * ROT_SPEED;
                 spiritLightParticleFactory.Launch(used, parent, angle, scaleMult);

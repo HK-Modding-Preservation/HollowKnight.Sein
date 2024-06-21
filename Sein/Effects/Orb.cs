@@ -25,7 +25,8 @@ internal class OrbParticleFactory : AbstractParticleFactory<OrbParticleFactory, 
         start.z = Z_OFFSET;
         Vector3 scale = new(INIT_SCALE, INIT_SCALE, 1);
 
-        particle.SetParams(start, start + dist, scale, scale, 0, 0);
+        particle.SetParams(start, start + dist, scale, Vector3.zero, 0, 0);
+        particle.Finalize(prewarm);
     }
 }
 

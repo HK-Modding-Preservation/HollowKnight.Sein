@@ -87,10 +87,13 @@ internal abstract class AbstractParticle<F, P> : MonoBehaviour where F : Abstrac
 
         age = 0;
         this.lifetime = lifetime;
-
-        gameObject.SetActive(true);
-        Update(prewarm);
         return true;
+    }
+
+    internal void Finalize(float prewarm)
+    {
+        Update(prewarm);
+        gameObject.SetActive(true);
     }
 
     protected virtual bool UseLocalPos => false;
@@ -106,7 +109,7 @@ internal abstract class AbstractParticle<F, P> : MonoBehaviour where F : Abstrac
     protected virtual void Update(float time)
     {
         age += time;
-        if (age >= Lifetime)
+        if (age >= lifetime)
         {
             gameObject.SetActive(false);
             pool.Return(Self());
