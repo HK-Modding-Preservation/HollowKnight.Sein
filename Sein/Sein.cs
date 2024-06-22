@@ -32,6 +32,7 @@ public class SeinMod : Mod
 
     public override void Initialize()
     {
+        HivebloodWatcher.Hook();
         Hud.HudAttacher.Hook();
         Orb.Hook();
         Regenerate.Hook();
