@@ -15,7 +15,7 @@ internal class HivebloodWatcher
         ItemChanger.Events.AddFsmEdit(new("Health", "Hive Health Regen"), WatchHiveblood);
     }
 
-    public static bool HivebloodEquipped => PlayerData.instance.GetBool("equipped_29");
+    public static bool HivebloodEquipped => PlayerData.instance.GetBool(nameof(PlayerData.equippedCharm_29));
 
     public static bool HivebloodHealing { get; private set; }
 

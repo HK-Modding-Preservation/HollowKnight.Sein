@@ -74,16 +74,14 @@ internal class Orb : MonoBehaviour
     private static Vector3 TARGET_SIZE => new(X_RANGE * 2, Y_RANGE * 2, 0);
     private static float MAX_BRAKE_DISTANCE = MAX_SPEED * MAX_SPEED / (2 * ACCEL);
 
-    private HeroController controller;
-    private GameObject knight;
-
-    protected void Awake()
+    private GameObject? _knight;
+    private GameObject? Knight()
     {
-        controller = GOFinder.HeroController();
-        knight = controller.gameObject;
+        _knight ??= HeroController.instance?.gameObject;
+        return _knight;
     }
 
-    private Vector3 KnightPos => knight.transform.position;
+    private Vector3 KnightPos => Knight()?.transform.position ?? Vector3.zero;
 
     private Vector3 TargetPos => KnightPos + new Vector3(0, Y_OFFSET, Z_OFFSET);
 
