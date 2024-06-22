@@ -12,7 +12,7 @@ internal class HudAttacher : PersistentAttacher<HudAttacher, Hud>
 
 internal class Hud : PersistentMonoBehaviour
 {
-    private static Vector3 LIVE_OFFSET = new(-8, 6.75f, 0);
+    private static Vector3 LIVE_OFFSET = new(-7.65f, 6.75f, 0);
     private static Vector3 HIDE_OFFSET = new(-100, 0, 0);
     private static Vector3 SLIDE_OUT_OFFSET = new(0, 3.5f, 0);
 
@@ -46,6 +46,11 @@ internal class Hud : PersistentMonoBehaviour
         lifeHud.transform.SetParent(oriHud.transform);
         lifeHud.transform.localPosition = Vector3.zero;
         lifeHud.AddComponent<LifeHud>();
+
+        GameObject energyHud = new("EnergyHud");
+        energyHud.transform.SetParent(oriHud.transform);
+        energyHud.transform.localPosition = Vector3.zero;
+        energyHud.AddComponent<EnergyHud>();
     }
 
     protected void OnDestroy()

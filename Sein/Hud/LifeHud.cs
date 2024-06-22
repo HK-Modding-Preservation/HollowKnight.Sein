@@ -48,10 +48,10 @@ internal class LifeCell : AbstractUICell<LifeCell, LifeCellState>
 
     protected override Color GetFrameColor(LifeCellState state)
     {
-        if (state.furied) return FURY_COLOR.Darker(0.4f);
-        else if (state.hiveblood) return HIVEBLOOD_COLOR.Darker(state.lifeblood ? 0.15f : 0.25f);
-        else if (state.lifeblood) return LIFEBLOOD_COLOR.Darker(0.25f);
-        else return LIFE_COLOR.Darker(0.2f);
+        if (state.furied) return FURY_COLOR.Darker(0.45f);
+        else if (state.hiveblood) return HIVEBLOOD_COLOR.Darker(state.lifeblood ? 0.25f : 0.55f);
+        else if (state.lifeblood) return LIFEBLOOD_COLOR.Darker(0.35f);
+        else return LIFE_COLOR.Darker(0.45f);
     }
 
     protected override float ComputeBodyScale(LifeCellState state) => state.fillState == LifeCellFillState.Filled ? 1 : 0;
@@ -75,14 +75,14 @@ internal class LifeCell : AbstractUICell<LifeCell, LifeCellState>
         if (bodySize > 0 && bodySize < 1)
         {
             if (targetState.fillState == LifeCellFillState.Filled)
-                TickParticles(healTicker, HEAL_PARTICLES_TIME, targetBodyColor.Value, UICellParticleMode.Inwards);
+                TickParticles(healTicker, Time.deltaTime, HEAL_PARTICLES_TIME, targetBodyColor.Value, UICellParticleMode.Inwards);
             else
-                TickParticles(damageTicker, DAMAGE_PARTICLES_TIME, prevBodyColor, UICellParticleMode.Outwards);
+                TickParticles(damageTicker, Time.deltaTime, DAMAGE_PARTICLES_TIME, prevBodyColor, UICellParticleMode.Outwards);
         }
         else
         {
-            if (targetState.lifeblood) TickParticles(lifebloodDripTicker, LIFEBLOOD_DRIP_TIME, LIFEBLOOD_COLOR, UICellParticleMode.Drip);
-            if (targetState.fillState == LifeCellFillState.Healing) TickParticles(hivebloodDripTicker, HIVEBLOOD_DRIP_TIME, HIVEBLOOD_COLOR, UICellParticleMode.Drip);
+            if (targetState.lifeblood) TickParticles(lifebloodDripTicker, Time.deltaTime, LIFEBLOOD_DRIP_TIME, LIFEBLOOD_COLOR, UICellParticleMode.Drip);
+            if (targetState.fillState == LifeCellFillState.Healing) TickParticles(hivebloodDripTicker, Time.deltaTime, HIVEBLOOD_DRIP_TIME, HIVEBLOOD_COLOR, UICellParticleMode.Drip);
         }
     }
 }

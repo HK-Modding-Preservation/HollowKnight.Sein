@@ -26,6 +26,6 @@ internal static class GameObjectExtensions
     {
         var black = Color.black;
         black.a = self.a;
-        return self.Interpolate(1 - f, black);
+        return self.Interpolate(f, black);
     }
 }

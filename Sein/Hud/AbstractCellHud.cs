@@ -157,7 +157,7 @@ internal abstract class AbstractUICell<C, T> : MonoBehaviour where C : AbstractU
     private static Color COVER_COLOR = new(COVER_GRAY, COVER_GRAY, COVER_GRAY, COVER_ALPHA);
 
     private UICellParticleFactory particleFactory;
-    private C? previousCell;
+    protected C? previousCell;
 
     private GameObject scaleContainer;
     private GameObject bg;
@@ -285,6 +285,7 @@ internal abstract class AbstractUICell<C, T> : MonoBehaviour where C : AbstractU
             targetFrameColor = GetFrameColor(state);
         }
         bodyProgress.Advance(Time.deltaTime * BodyAdvanceSpeed(), 1);
+        if (bodyProgress.Value == 1) prevState = targetState;
 
         var scale = ComputeBodyScale();
 
@@ -320,9 +321,9 @@ internal abstract class AbstractUICell<C, T> : MonoBehaviour where C : AbstractU
 
     protected static PeriodicFloatTicker RatedTicker(float rate) => new(1, Mathf.FloorToInt(rate * (MIN_TICKS + MAX_TICKS) / 2), MIN_TICKS, MAX_TICKS);
 
-    protected void TickParticles(PeriodicFloatTicker ticker, float time, Color color, UICellParticleMode mode)
+    protected void TickParticles(PeriodicFloatTicker ticker, float deltaTime, float time, Color color, UICellParticleMode mode)
     {
-        foreach (var elapsed in ticker.TickFloats(Time.deltaTime))
+        foreach (var elapsed in ticker.TickFloats(deltaTime))
             particleFactory.Launch(elapsed, scaleContainer.transform, color, time, mode);
     }
 
