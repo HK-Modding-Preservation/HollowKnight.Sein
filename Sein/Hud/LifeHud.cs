@@ -57,10 +57,19 @@ internal class LifeStateTracker
         }
         else if (jonis)
         {
+            // Base health is always 1.
+            cellStates.Add(new()
+            {
+                fillState = LifeCellFillState.Filled,
+                permanent = true,
+                hiveblood = hiveblood,
+                lifeblood = true,
+                furied = furied,
+            });
+
             for (int i = 0; i < healthBlue; i++) cellStates.Add(new()
             {
                 fillState = LifeCellFillState.Filled,
-                permanent = i == 0,
                 hiveblood = hiveblood,
                 lifeblood = true,
                 furied = furied,
@@ -90,11 +99,130 @@ internal class LifeStateTracker
                 lifeblood = true,
             });
 
-            if (hivebloodHealing && health < maxHealth) cellStates[health].fillState = LifeCellFillState.Healing;
+            if (hivebloodHealing) cellStates[health].fillState = LifeCellFillState.Healing;
         }
     }
 
     public List<LifeCellState> GetCellStates() => new(cellStates);
+}
+
+public enum LifeCellParticleMode
+{
+    Inwards,
+    Outwards,
+    Drip,
+}
+
+internal class LifeCellParticleFactory : UIParticleFactory<LifeCellParticleFactory, LifeCellParticle>
+{
+    private static IC.EmbeddedSprite sprite = new("cellbody");
+
+    protected override string GetObjectName() => "LifeCellParticle";
+
+    protected override Sprite GetSprite() => sprite.Value;
+
+    protected override int SortingOrder => LifeCell.PARTICLE_ORDER;
+
+    public void Launch(float prewarm, Transform parent, Color color, float time, LifeCellParticleMode mode)
+    {
+        if (!Launch(prewarm, time, out var particle)) return;
+
+        particle.gameObject.transform.parent = parent;
+        particle.gameObject.GetComponent<SpriteRenderer>().color = color;
+        particle.SetParams(mode);
+        particle.Finalize(prewarm);
+    }
+}
+
+internal class LifeCellParticle : AbstractParticle<LifeCellParticleFactory, LifeCellParticle>
+{
+    private static float RADIAL_SPAWN_MIN = 1.25f;
+    private static float RADIAL_SPAWN_MAX = 1.75f;
+    private static float RADIAL_INTERIOR_SPAWN_MAX = 0.8f;
+    private static float RADIAL_DRIP_MIN = 1.65f;
+    private static float RADIAL_DRIP_MAX = 2.65f;
+    private static float BURST_SCALE_MIN = 0.25f;
+    private static float BURST_SCALE_MAX = 0.35f;
+    private static float DRIP_SCALE_MIN = 0.15f;
+    private static float DRIP_SCALE_MAX = 0.2f;
+
+    private LifeCellParticleMode mode;
+    private float angle;
+    private float spawnRadius;
+    private float scaleMult;
+    private float drip;
+
+    protected override bool UseLocalPos => true;
+
+    internal void SetParams(LifeCellParticleMode mode)
+    {
+        this.mode = mode;
+        this.angle = Random.Range(0f, 360f);
+
+        if (mode == LifeCellParticleMode.Drip)
+        {
+            spawnRadius = Mathf.Sqrt(Random.Range(0f, 1f)) * RADIAL_INTERIOR_SPAWN_MAX;
+            drip = Random.Range(RADIAL_DRIP_MIN, RADIAL_DRIP_MAX);
+            scaleMult = Random.Range(DRIP_SCALE_MIN, DRIP_SCALE_MAX);
+        }
+        else
+        {
+            spawnRadius = Random.Range(RADIAL_SPAWN_MIN, RADIAL_SPAWN_MAX);
+            scaleMult = Random.Range(BURST_SCALE_MIN, BURST_SCALE_MAX);
+        }
+    }
+
+    private float AlphaValue()
+    {
+        switch (mode)
+        {
+            case LifeCellParticleMode.Inwards: return Mathf.Sqrt(Progress);
+            case LifeCellParticleMode.Outwards: return Mathf.Sqrt(RProgress);
+            case LifeCellParticleMode.Drip: return RProgress;
+            default: return Progress;
+        }
+    }
+
+    private float ScaleValue()
+    {
+        if (mode == LifeCellParticleMode.Drip) return Mathf.Sqrt(RProgress);
+        else return AlphaValue();
+    }
+
+    protected override float GetAlpha() => AlphaValue();
+
+    private (Vector3, Vector3) StartEndPos()
+    {
+        Vector3 fwd = new(spawnRadius, 0, 0);
+        if (mode == LifeCellParticleMode.Drip)
+        {
+            Vector3 dripVec = new(0, -drip, 0);
+
+            var spawn = Quaternion.Euler(0, 0, angle) * fwd;
+            return (spawn, spawn + dripVec);
+        }
+        else
+        {
+            var outer = Quaternion.Euler(0, 0, angle) * fwd;
+            if (mode == LifeCellParticleMode.Inwards) return (outer, Vector3.zero);
+            else return (Vector3.zero, outer);
+        }
+    }
+
+    protected override Vector3 GetPos()
+    {
+        var (start, end) = StartEndPos();
+        var prog = mode == LifeCellParticleMode.Drip ? Progress : Mathf.Sqrt(Progress);
+        return start + (end - start) * prog;
+    }
+
+    protected override Vector3 GetScale()
+    {
+        var scale = ScaleValue() * scaleMult;
+        return new(scale, scale, 1);
+    }
+
+    protected override LifeCellParticle Self() => this;
 }
 
 internal class LifeCell : MonoBehaviour
@@ -110,14 +238,19 @@ internal class LifeCell : MonoBehaviour
 
     private const int BG_ORDER = -2;
     private const int BODY_ORDER = -1;
-    private const int FRAME_ORDER = 1;
-    private const int COVER_ORDER = 2;
+    internal const int PARTICLE_ORDER = 1;
+    private const int FRAME_ORDER = 2;
+    private const int COVER_ORDER = 3;
     private static float BG_ALPHA = 0.75f;
     private static float COVER_GRAY = 0.95f;
     private static float COVER_ALPHA = 0.45f;
     private static Color COVER_COLOR = new(COVER_GRAY, COVER_GRAY, COVER_GRAY, COVER_ALPHA);
 
+    private LifeCellParticleFactory particleFactory;
+
     private LifeCell? previous;
+
+    private GameObject scaleContainer;
     private GameObject bg;
     private SpriteRenderer bgRenderer;
     private GameObject body;
@@ -129,12 +262,25 @@ internal class LifeCell : MonoBehaviour
 
     private static Color Hex(int r, int g, int b) => new(r / 255f, g / 255f, b / 255f);
 
-    private Color GetStateColor(LifeCellState state)
+    private static readonly Color FURY_COLOR = Hex(170, 44, 22);
+    private static readonly Color LIFEBLOOD_COLOR = Hex(93, 183, 209);
+    private static readonly Color HIVEBLOOD_COLOR = Hex(245, 153, 52);
+    private static readonly Color LIFE_COLOR = Hex(201, 233, 97);
+
+    private Color GetBodyColor(LifeCellState state)
     {
-        if (state.furied) return Hex(170, 44, 22);
-        if (state.lifeblood) return Hex(93, 183, 209);
-        else if (state.hiveblood) return Hex(245, 153, 52);
-        else return Hex(201, 233, 97);
+        if (state.furied) return FURY_COLOR;
+        else if (state.lifeblood) return LIFEBLOOD_COLOR;
+        else if (state.hiveblood) return HIVEBLOOD_COLOR;
+        else return LIFE_COLOR;
+    }
+
+    private Color GetFrameColor(LifeCellState state)
+    {
+        if (state.furied) return FURY_COLOR.Darker(0.4f);
+        else if (state.hiveblood) return HIVEBLOOD_COLOR.Darker(state.lifeblood ? 0.15f : 0.25f);
+        else if (state.lifeblood) return LIFEBLOOD_COLOR.Darker(0.25f);
+        else return LIFE_COLOR.Darker(0.2f);
     }
 
     private static int ModPow(int b, int p, int m)
@@ -144,17 +290,19 @@ internal class LifeCell : MonoBehaviour
         return x;
     }
 
-    private void InitImpl(LifeCell? previous, int index, LifeCellState state)
+    private void InitImpl(LifeCellParticleFactory particleFactory, LifeCell? previous, int index, LifeCellState state)
     {
+        this.particleFactory = particleFactory;
         this.previous = previous;
 
         prevState = new() { fillState = LifeCellFillState.Empty };
-        prevColor = GetStateColor(state);
+        prevBodyColor = GetBodyColor(state);
+        prevFrameColor = GetFrameColor(state);
         targetState = state;
-        targetColor = prevColor;
-        bodyProgress.Value = 1;
+        targetBodyColor = prevBodyColor;
+        targetFrameColor = prevFrameColor;
 
-        GameObject scaleContainer = new("LifeCellScaleContainer");
+        scaleContainer = new("LifeCellScaleContainer");
         scaleContainer.transform.parent = transform;
         var scale = previous != null ? SMALL_CELL_SCALE : LARGE_CELL_SCALE;
         scaleContainer.transform.localScale = new(scale, scale, 1);
@@ -166,7 +314,7 @@ internal class LifeCell : MonoBehaviour
 
         (body, bodyRenderer) = UISprites.CreateUISprite("LifeCellBody", bodySprite.Value, BODY_ORDER);
         body.transform.parent = scaleContainer.transform;
-        bodyRenderer.color = prevColor;
+        bodyRenderer.color = prevBodyColor;
         body.SetActive(false);
 
         (frame, frameRenderer) = UISprites.CreateUISprite("LifeCellFrame", frameSprite.Value, FRAME_ORDER);
@@ -180,11 +328,11 @@ internal class LifeCell : MonoBehaviour
         cover.SetActive(false);
     }
 
-    public static LifeCell Create(LifeCell? previous, int index, LifeCellState state)
+    public static LifeCell Create(LifeCellParticleFactory particleFactory, LifeCell? previous, int index, LifeCellState state)
     {
         GameObject obj = new("LifeCell");
         var lifeCell = obj.AddComponent<LifeCell>();
-        lifeCell.InitImpl(previous, index, state);
+        lifeCell.InitImpl(particleFactory, previous, index, state);
 
         return lifeCell;
     }
@@ -211,8 +359,10 @@ internal class LifeCell : MonoBehaviour
 
     private LifeCellState prevState;
     private LifeCellState? targetState;
-    private Color prevColor;
-    private Color? targetColor;
+    private Color prevBodyColor;
+    private Color prevFrameColor;
+    private Color? targetBodyColor;
+    private Color? targetFrameColor;
     private ProgressFloat bodyProgress = new(0, 1, 1);
 
     private static float ComputeBodyScale(LifeCellState state) => state.fillState == LifeCellFillState.Filled ? 1 : 0;
@@ -224,7 +374,9 @@ internal class LifeCell : MonoBehaviour
         return prevScale + (newScale - prevScale) * bodyProgress.Value;
     }
 
-    private Color ComputeBodyColor() => prevColor.Interpolate(bodyProgress.Value, targetColor.Value);
+    private Color ComputeBodyColor() => prevBodyColor.Interpolate(bodyProgress.Value, targetBodyColor.Value);
+
+    private Color ComputeFrameColor() => prevFrameColor.Interpolate(bodyProgress.Value, targetFrameColor.Value);
 
     private float SyncBody(LifeCellState state)
     {
@@ -233,25 +385,28 @@ internal class LifeCell : MonoBehaviour
         {
             // Reset progress.
             bodyProgress.Value = 0;
-            prevColor = bodyRenderer.color;
+
             prevState = targetState;
+            prevBodyColor = bodyRenderer.color;
+            prevFrameColor = frameRenderer.color;
+
             targetState = state;
-            targetColor = GetStateColor(state);
+            targetBodyColor = GetBodyColor(state);
+            targetFrameColor = GetFrameColor(state);
         }
         bodyProgress.Advance(Time.deltaTime * (targetState.fillState == LifeCellFillState.Empty ? 8 : 3), 1);
 
         var scale = ComputeBodyScale();
-        var color = ComputeBodyColor();
 
         if (state.permanent) scale *= bgSize.Value;
         if (scale > 0)
         {
             body.transform.localScale = new(scale, scale, 1);
-            bodyRenderer.color = color;
+            bodyRenderer.color = ComputeBodyColor();
             body.SetActive(true);
 
             frame.transform.localScale = new(scale, scale, 1);
-            frameRenderer.color = color.Darker(0.3f);
+            frameRenderer.color = ComputeFrameColor();
             frame.SetActive(true);
         }
         else
@@ -270,13 +425,53 @@ internal class LifeCell : MonoBehaviour
         cover.transform.localScale = new(scale, scale, 1);
     }
 
+    private const float HEAL_PARTICLES_PER_SEC = 100;
+    private const float HEAL_PARTICLES_TIME = 0.3f;
+    private const float DAMAGE_PARTICLES_PER_SEC = 150;
+    private const float DAMAGE_PARTICLES_TIME = 0.2f;
+    private const float LIFEBLOOD_DRIP_PER_SEC = 6.5f;
+    private const float LIFEBLOOD_DRIP_TIME = 1.85f;
+    private const float HIVEBLOOD_DRIP_PER_SEC = 13f;
+    private const float HIVEBLOOD_DRIP_TIME = 1.25f;
+
+    private const int MIN_TICKS = 90;
+    private const int MAX_TICKS = 110;
+
+    private static PeriodicFloatTicker RatedTicker(float rate) => new(1, Mathf.FloorToInt(rate * (MIN_TICKS + MAX_TICKS) / 2), MIN_TICKS, MAX_TICKS);
+
+    private PeriodicFloatTicker healTicker = RatedTicker(HEAL_PARTICLES_PER_SEC);
+    private PeriodicFloatTicker damageTicker = RatedTicker(DAMAGE_PARTICLES_PER_SEC);
+    private PeriodicFloatTicker lifebloodDripTicker = RatedTicker(LIFEBLOOD_DRIP_PER_SEC);
+    private PeriodicFloatTicker hivebloodDripTicker = RatedTicker(HIVEBLOOD_DRIP_PER_SEC);
+
+    private void TickParticles(PeriodicFloatTicker ticker, float time, Color color, LifeCellParticleMode mode)
+    {
+        foreach (var elapsed in ticker.TickFloats(Time.deltaTime))
+            particleFactory.Launch(elapsed, scaleContainer.transform, color, time, mode);
+    }
+
+    private void EmitParticles(float bodySize)
+    {
+        if (bodySize > 0 && bodySize < 1)
+        {
+            if (targetState.fillState == LifeCellFillState.Filled)
+                TickParticles(healTicker, HEAL_PARTICLES_TIME, targetBodyColor.Value, LifeCellParticleMode.Inwards);
+            else
+                TickParticles(damageTicker, DAMAGE_PARTICLES_TIME, prevBodyColor, LifeCellParticleMode.Outwards);
+        }
+        else
+        {
+            if (targetState.lifeblood) TickParticles(lifebloodDripTicker, LIFEBLOOD_DRIP_TIME, LIFEBLOOD_COLOR, LifeCellParticleMode.Drip);
+            if (targetState.fillState == LifeCellFillState.Healing) TickParticles(hivebloodDripTicker, HIVEBLOOD_DRIP_TIME, HIVEBLOOD_COLOR, LifeCellParticleMode.Drip);
+        }
+    }
+
     public void Sync(LifeCellState state)
     {
         var a = SyncBG(state);
         var b = SyncBody(state);
         SyncCover(a, b);
-
-        // TODO: Particles
+        EmitParticles(b);
     }
 }
 
@@ -306,6 +501,7 @@ internal class LifeHud : MonoBehaviour
     private static readonly float OFFSET_Y = 0;
 
     private LifeStateTracker tracker = new();
+    private LifeCellParticleFactory particleFactory = new();
     private List<LifeCell> lifeCells = new();
 
     protected void Awake() => tracker.Init();
@@ -314,7 +510,7 @@ internal class LifeHud : MonoBehaviour
 
     private void AddLifeCell(LifeCellState state)
     {
-        var newCell = LifeCell.Create(lifeCells.Count == 0 ? null : lifeCells[lifeCells.Count - 1], lifeCells.Count, state);
+        var newCell = LifeCell.Create(particleFactory, lifeCells.Count == 0 ? null : lifeCells[lifeCells.Count - 1], lifeCells.Count, state);
         
         newCell.transform.parent = transform;
         newCell.transform.localPosition = new(OffsetX(lifeCells.Count), OFFSET_Y, 0);
