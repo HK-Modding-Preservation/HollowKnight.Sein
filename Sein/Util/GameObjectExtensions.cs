@@ -21,4 +21,11 @@ internal static class GameObjectExtensions
         float a = Interploate(self.a, f, other.a);
         return new Color(r, g, b, a);
     }
+
+    public static Color Darker(this Color self, float f)
+    {
+        var black = Color.black;
+        black.a = self.a;
+        return self.Interpolate(1 - f, black);
+    }
 }

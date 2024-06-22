@@ -101,6 +101,7 @@ internal class LifeCell : MonoBehaviour
 {
     private static IC.EmbeddedSprite bgSprite = new("cellbg");
     private static IC.EmbeddedSprite bodySprite = new("cellbody");
+    private static IC.EmbeddedSprite frameSprite = new("cellframe");
     private static IC.EmbeddedSprite firstCover = new("lifecell1cover");
     private static IC.EmbeddedSprite otherCover = new("lifecellncover");
 
@@ -109,24 +110,31 @@ internal class LifeCell : MonoBehaviour
 
     private const int BG_ORDER = -2;
     private const int BODY_ORDER = -1;
-    private const int COVER_ORDER = 1;
+    private const int FRAME_ORDER = 1;
+    private const int COVER_ORDER = 2;
     private static float BG_ALPHA = 0.75f;
-    private static Color COVER_COLOR = new(0.5f, 0.5f, 0.5f, 0.35f);
+    private static float COVER_GRAY = 0.95f;
+    private static float COVER_ALPHA = 0.45f;
+    private static Color COVER_COLOR = new(COVER_GRAY, COVER_GRAY, COVER_GRAY, COVER_ALPHA);
 
     private LifeCell? previous;
     private GameObject bg;
     private SpriteRenderer bgRenderer;
     private GameObject body;
     private SpriteRenderer bodyRenderer;
+    private GameObject frame;
+    private SpriteRenderer frameRenderer;
     private GameObject cover;
     private SpriteRenderer coverRenderer;
 
+    private static Color Hex(int r, int g, int b) => new(r / 255f, g / 255f, b / 255f);
+
     private Color GetStateColor(LifeCellState state)
     {
-        if (state.furied) return new(170, 44, 22);
-        if (state.lifeblood) return new(93, 183, 209);
-        else if (state.hiveblood) return new(245, 153, 52);
-        return new(201, 233, 97);
+        if (state.furied) return Hex(170, 44, 22);
+        if (state.lifeblood) return Hex(93, 183, 209);
+        else if (state.hiveblood) return Hex(245, 153, 52);
+        else return Hex(201, 233, 97);
     }
 
     private static int ModPow(int b, int p, int m)
@@ -140,7 +148,7 @@ internal class LifeCell : MonoBehaviour
     {
         this.previous = previous;
 
-        prevState = state;
+        prevState = new() { fillState = LifeCellFillState.Empty };
         prevColor = GetStateColor(state);
         targetState = state;
         targetColor = prevColor;
@@ -154,18 +162,22 @@ internal class LifeCell : MonoBehaviour
         (bg, bgRenderer) = UISprites.CreateUISprite("LifeCellBG", bgSprite.Value, BG_ORDER);
         bg.transform.parent = scaleContainer.transform;
         bgRenderer.SetAlpha(BG_ALPHA);
-        bg.gameObject.SetActive(false);
+        bg.SetActive(false);
 
         (body, bodyRenderer) = UISprites.CreateUISprite("LifeCellBody", bodySprite.Value, BODY_ORDER);
         body.transform.parent = scaleContainer.transform;
         bodyRenderer.color = prevColor;
-        body.gameObject.SetActive(false);
+        body.SetActive(false);
+
+        (frame, frameRenderer) = UISprites.CreateUISprite("LifeCellFrame", frameSprite.Value, FRAME_ORDER);
+        frame.transform.parent = scaleContainer.transform;
+        frame.SetActive(false);
 
         (cover, coverRenderer) = UISprites.CreateUISprite("LifeCellCover", (previous == null ? firstCover : otherCover).Value, COVER_ORDER);
         cover.transform.parent = scaleContainer.transform;
         cover.transform.localRotation = Quaternion.Euler(0, 0, index == 0 ? 0 : (ModPow(5, (index - 1), 23) * 15));
         coverRenderer.color = COVER_COLOR;
-        cover.gameObject.SetActive(false);
+        cover.SetActive(false);
     }
 
     public static LifeCell Create(LifeCell? previous, int index, LifeCellState state)
@@ -203,7 +215,7 @@ internal class LifeCell : MonoBehaviour
     private Color? targetColor;
     private ProgressFloat bodyProgress = new(0, 1, 1);
 
-    private static float ComputeBodyScale(LifeCellState state) => state.fillState == LifeCellFillState.Filled ? 0 : 1;
+    private static float ComputeBodyScale(LifeCellState state) => state.fillState == LifeCellFillState.Filled ? 1 : 0;
 
     private float ComputeBodyScale()
     {
@@ -236,9 +248,17 @@ internal class LifeCell : MonoBehaviour
         {
             body.transform.localScale = new(scale, scale, 1);
             bodyRenderer.color = color;
-            body.gameObject.SetActive(true);
+            body.SetActive(true);
+
+            frame.transform.localScale = new(scale, scale, 1);
+            frameRenderer.color = color.Darker(0.3f);
+            frame.SetActive(true);
         }
-        else body.gameObject.SetActive(false);
+        else
+        {
+            body.SetActive(false);
+            frame.SetActive(false);
+        }
 
         return scale;
     }
@@ -246,7 +266,7 @@ internal class LifeCell : MonoBehaviour
     private void SyncCover(float a, float b)
     {
         float scale = Mathf.Max(a, b);
-        cover.gameObject.SetActive(scale > 0);
+        cover.SetActive(scale > 0);
         cover.transform.localScale = new(scale, scale, 1);
     }
 
