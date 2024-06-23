@@ -87,13 +87,15 @@ internal class EnergyHud : AbstractCellHud<EnergyCell, EnergyCellState>
 
         var mpCharge = pd.GetInt(nameof(PlayerData.MPCharge));
         var mpReserve = pd.GetInt(nameof(PlayerData.MPReserve));
-        var soulLimited = pd.GetBool(nameof(PlayerData.soulLimited));
         var mpReserveMax = pd.GetInt(nameof(PlayerData.MPReserveMax));
+        var soulLimited = pd.GetBool(nameof(PlayerData.soulLimited));
+
+        mpReserveMax -= mpReserveMax % 33;
 
         List<EnergyCellState> cellStates = new();
 
         if (soulLimited) cellStates.Add(new() { fillState = EnergyCellFillState.Shattered });
-        foreach (var used in SplitEnergy(mpReserve))
+        foreach (var used in SplitEnergy(Mathf.Min(mpReserve, mpReserveMax)))
         {
             cellStates.Add(new()
             {
