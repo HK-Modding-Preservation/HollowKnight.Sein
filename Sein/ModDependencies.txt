@@ -1,4 +1,6 @@
 Custom Knight
+CustomKnightSuperAnimationAddon
+FrogCore
 ItemChanger
 PurenailCore
 SFCore

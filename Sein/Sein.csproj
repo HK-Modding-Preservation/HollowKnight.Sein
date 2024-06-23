@@ -60,6 +60,15 @@
     <Reference Include="CustomKnight">
       <HintPath>$(HollowKnightRefs)/Mods/Custom Knight/CustomKnight.dll</HintPath>
     </Reference>
+    <Reference Include="CustomKnightPlus">
+      <HintPath>$(HollowKnightRefs)/Mods/CustomKnightPlus/CustomKnightPlus.dll</HintPath>
+    </Reference>
+    <Reference Include="CustomKnightSuperAnimationAddon">
+      <HintPath>$(HollowKnightRefs)/Mods/CustomKnightSuperAnimationAddon/CustomKnightSuperAnimationAddon.dll</HintPath>
+    </Reference>
+    <Reference Include="FrogCore">
+      <HintPath>$(HollowKnightRefs)/Mods/FrogCore/FrogCore.dll</HintPath>
+    </Reference>
     <Reference Include="GalaxyCSharp">
       <HintPath>$(HollowKnightRefs)/GalaxyCSharp.dll</HintPath>
     </Reference>
