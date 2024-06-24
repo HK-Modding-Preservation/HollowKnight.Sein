@@ -164,7 +164,7 @@ internal class Orb : MonoBehaviour
 
                 var vel = velocity * VEL_MULTIPLIER;
                 if (vel.magnitude > VEL_CAP) vel = vel.normalized * VEL_CAP;
-                orbParticleFactory.Launch(elapsed, pos, vel);
+                orbParticleFactory.Launch(time - elapsed, pos, vel);
             }
             else
             {

@@ -120,41 +120,37 @@ internal class SpiritParticleUpdater
     private const float REVOLUTION_TIME = 15;
     private const float ROT_SPEED = 360f / REVOLUTION_TIME;
     private const float PARTICLES_PER_SECOND = 4.75f;
-    private const int MIN_TICKS = 110;
-    private const int MAX_TICKS = 140;
-    private static readonly int TICKS_PER_REVOLUTION = Mathf.FloorToInt(REVOLUTION_TIME * PARTICLES_PER_SECOND * (MIN_TICKS + MAX_TICKS) / 2);
 
     private const float FRAME_PARTICLES_PER_SECOND = 15;
-    private static readonly int FRAME_TICKS_PER_SECOND = Mathf.FloorToInt(FRAME_PARTICLES_PER_SECOND * (MIN_TICKS + MAX_TICKS) / 2);
 
     private readonly SpiritLightParticleFactory spiritLightParticleFactory = new();
     private readonly SpiritLightFrameParticleFactory spiritLightFrameParticleFactory = new();
     private readonly Transform parent;
-    private readonly List<PeriodicFloatTicker> spiritLightTickers = new();
-    private readonly PeriodicFloatTicker frameTicker;
+    private readonly List<RandomFloatTicker> spiritLightTickers = new();
+    private readonly RandomFloatTicker frameTicker;
 
     internal SpiritParticleUpdater(Transform parent)
     {
         this.parent = parent;
 
         spiritLightTickers = new();
-        for (int i = 0; i < SPINDLES; i++) spiritLightTickers.Add(new(REVOLUTION_TIME, TICKS_PER_REVOLUTION, MIN_TICKS, MAX_TICKS));
-        frameTicker = new(1, FRAME_TICKS_PER_SECOND, MIN_TICKS, MAX_TICKS);
+        for (int i = 0; i < SPINDLES; i++) spiritLightTickers.Add(new(0.8f / PARTICLES_PER_SECOND, 1.2f / PARTICLES_PER_SECOND));
+        frameTicker = new(0.8f / FRAME_PARTICLES_PER_SECOND, 1.2f / FRAME_PARTICLES_PER_SECOND);
     }
 
     private float rotation = 0;
 
     public void Update(float time, float scaleMult)
     {
-        foreach (var used in frameTicker.TickFloats(time)) spiritLightFrameParticleFactory.Launch(used, parent, Random.Range(0f, 360f));
+        foreach (var elapsed in frameTicker.Tick(time)) spiritLightFrameParticleFactory.Launch(elapsed, parent, Random.Range(0f, 360f));
 
         for (int i = 0; i < spiritLightTickers.Count; i++)
         {
             float rotBase = rotation + i * 360f / spiritLightTickers.Count;
-            foreach (var used in spiritLightTickers[i].TickFloats(time))
+            foreach (var elapsed in spiritLightTickers[i].Tick(time))
             {
-                float angle = rotBase + used * ROT_SPEED;
-                spiritLightParticleFactory.Launch(used, parent, angle, scaleMult);
+                float angle = rotBase + elapsed * ROT_SPEED;
+                spiritLightParticleFactory.Launch(elapsed, parent, angle, scaleMult);
             }
         }
 

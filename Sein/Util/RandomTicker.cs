@@ -3,28 +3,26 @@ using UnityEngine;
 
 namespace Sein.Util;
 
-internal class RandomTicker
+internal class RandomIntTicker
 {
     private readonly int min;
     private readonly int max;
     private int next;
 
-    public RandomTicker(int min, int max)
+    public RandomIntTicker(int min, int max)
     {
         this.min = min;
         this.max = max;
-        this.next = UnityEngine.Random.Range(1, UnityEngine.Random.Range(min, max + 1) + 1);
+        this.next = Random.Range(1, Random.Range(min, max + 1) + 1);
     }
 
-    // Each returned int represents the number of ticks that passed between the start of this call and the next event.
-    // So for a non-random ticker that always takes 5 ticks per event, Tick(3) would yield nothing, a subsequent Tick(21) would yield [2, 7, 12, 17], and a tertiary Tick(5) would yield [1].
+    // Each returned int represents the number of ticks that have passed between the current event and the end of this call.
+    // So for a non-random ticker that always takes 5 ticks per event, Tick(3) would yield nothing, a subsequent Tick(21) would yield [18, 13, 8, 3], and a tertiary Tick(5) would yield [4].
     public IEnumerable<int> Tick(int ticks)
     {
-        int consumed = 0;
         while (next <= ticks)
         {
-            consumed += next;
-            yield return consumed;
+            yield return ticks - next;
             ticks -= next;
             next = Random.Range(min, max + 1);
         }
@@ -33,27 +31,28 @@ internal class RandomTicker
     }
 }
 
-internal class PeriodicFloatTicker
+internal class RandomFloatTicker
 {
-    private readonly RandomTicker ticker;
-    private readonly int intPeriod;
-    private readonly float floatPeriod;
+    private readonly float min;
+    private readonly float max;
+    private float next;
 
-    public PeriodicFloatTicker(float period, int ticks, int minTicks, int maxTicks)
+    public RandomFloatTicker(float min, float max)
     {
-        ticker = new(minTicks, maxTicks);
-        this.intPeriod = ticks;
-        this.floatPeriod = period;
+        this.min = min;
+        this.max = max;
+        this.next = Random.Range(0, Random.Range(min, max));
     }
 
-    private int prevInt = 0;
-
-    public IEnumerable<float> TickFloats(float ticks)
+    public IEnumerable<float> Tick(float ticks)
     {
-        var prevFloat = prevInt * floatPeriod / intPeriod;
-        var newInt = Mathf.FloorToInt((prevFloat + ticks) * intPeriod / floatPeriod);
+        while (next <= ticks)
+        {
+            yield return ticks - next;
+            ticks -= next;
+            next = Random.Range(min, max);
+        }
 
-        foreach (var consumed in ticker.Tick(newInt - prevInt)) yield return consumed * floatPeriod / intPeriod;
-        prevInt = newInt % intPeriod;
+        next -= ticks;
     }
 }

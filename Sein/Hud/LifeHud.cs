@@ -65,10 +65,10 @@ internal class LifeCell : AbstractUICell<LifeCell, LifeCellState>
     private const float HIVEBLOOD_DRIP_PER_SEC = 13f;
     private const float HIVEBLOOD_DRIP_TIME = 1.25f;
 
-    private PeriodicFloatTicker healTicker = RatedTicker(HEAL_PARTICLES_PER_SEC);
-    private PeriodicFloatTicker damageTicker = RatedTicker(DAMAGE_PARTICLES_PER_SEC);
-    private PeriodicFloatTicker lifebloodDripTicker = RatedTicker(LIFEBLOOD_DRIP_PER_SEC);
-    private PeriodicFloatTicker hivebloodDripTicker = RatedTicker(HIVEBLOOD_DRIP_PER_SEC);
+    private RandomFloatTicker healTicker = RatedTicker(HEAL_PARTICLES_PER_SEC);
+    private RandomFloatTicker damageTicker = RatedTicker(DAMAGE_PARTICLES_PER_SEC);
+    private RandomFloatTicker lifebloodDripTicker = RatedTicker(LIFEBLOOD_DRIP_PER_SEC);
+    private RandomFloatTicker hivebloodDripTicker = RatedTicker(HIVEBLOOD_DRIP_PER_SEC);
 
     protected override void EmitParticles(float bodySize)
     {
@@ -91,11 +91,7 @@ internal class LifeHud : AbstractCellHud<LifeCell, LifeCellState>
 {
     protected override int OffsetSign() => 1;
 
-    protected override float SineWaveDist()
-    {
-        var last = GetLastPermanentCell();
-        return Mathf.Min(3.5f, last?.transform.localPosition.x ?? 3.5f);
-    }
+    protected override float SineWaveDist() => 5;
 
     protected override float SineWaveFade() => 8;
 
@@ -107,16 +103,6 @@ internal class LifeHud : AbstractCellHud<LifeCell, LifeCellState>
     }
 
     protected override LifeCellState EmptyCellState() => new() { fillState = LifeCellFillState.Empty };
-
-    protected LifeCell? GetLastPermanentCell()
-    {
-        var states = GetCellStates();
-        int index = -1;
-        for (int i = 0; i < states.Count && i < cells.Count; i++) if (states[i].permanent) index = i;
-
-        if (index == -1) return null;
-        return cells[index];
-    }
 
     protected override List<LifeCellState> GetCellStates()
     {

@@ -34,8 +34,8 @@ internal class EnergyCell : AbstractUICell<EnergyCell, EnergyCellState>
     private static float SOUL_UNLOCK_RATE = 135;
     private static float SOUL_UNLOCK_TIME = 0.6f;
 
-    private PeriodicFloatTicker soulTicker = RatedTicker(SOUL_DRIP_RATE);
-    private PeriodicFloatTicker unlockTicker = RatedTicker(SOUL_UNLOCK_RATE);
+    private RandomFloatTicker soulTicker = RatedTicker(SOUL_DRIP_RATE);
+    private RandomFloatTicker unlockTicker = RatedTicker(SOUL_UNLOCK_RATE);
 
     protected override void EmitParticles(float bodySize)
     {
@@ -73,9 +73,9 @@ internal class EnergyHud : AbstractCellHud<EnergyCell, EnergyCellState>
 {
     protected override int OffsetSign() => -1;
 
-    protected override float SineWaveDist() => 2;
+    protected override float SineWaveDist() => 2.5f;
 
-    protected override float SineWaveFade() => 5;
+    protected override float SineWaveFade() => 5.5f;
 
     protected override Color SineWaveColor()
     {

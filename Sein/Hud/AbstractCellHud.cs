@@ -96,22 +96,20 @@ internal class SineWaveParticle : AbstractParticle<SineWaveParticleFactory, Sine
 internal class SineWaveLauncher
 {
     private static readonly float SPEED = 0.2f;
-    private static readonly float SPAN = 0.539f;
+    private static readonly float SPAN = 0.67f;
     private static float RATE = SPEED / SPAN;
-    private const int TICKS_PER_SECOND = 1000;
-    private static readonly int TICKS_PER_WAVE = Mathf.FloorToInt(TICKS_PER_SECOND / RATE);
 
     private readonly SineWaveParticleFactory particleFactory;
-    private readonly PeriodicFloatTicker ticker = new(1, TICKS_PER_SECOND, TICKS_PER_WAVE, TICKS_PER_WAVE);
+    private readonly RandomFloatTicker ticker = new(1 / RATE, 1 / RATE);
     private bool up = true;
 
     internal SineWaveLauncher(bool lifeHud) => this.particleFactory = new(lifeHud);
 
     public void Update(float time, Transform parent, int dir, float fadeDist, float fadeLength, Color color)
     {
-        foreach (var used in ticker.TickFloats(time))
+        foreach (var elapsed in ticker.Tick(time))
         {
-            particleFactory.Launch(used, parent, dir, SPEED, fadeDist, fadeLength, color, up);
+            particleFactory.Launch(elapsed, parent, dir, SPEED, fadeDist, fadeLength, color, up);
             up = !up;
         }
     }
@@ -431,14 +429,11 @@ internal abstract class AbstractUICell<C, T> : MonoBehaviour where C : AbstractU
         cover.transform.localScale = new(scale, scale, 1);
     }
 
-    private const int MIN_TICKS = 90;
-    private const int MAX_TICKS = 110;
+    protected static RandomFloatTicker RatedTicker(float rate) => new(0.9f * rate, 1.1f * rate);
 
-    protected static PeriodicFloatTicker RatedTicker(float rate) => new(1, Mathf.FloorToInt(rate * (MIN_TICKS + MAX_TICKS) / 2), MIN_TICKS, MAX_TICKS);
-
-    protected void TickParticles(PeriodicFloatTicker ticker, float deltaTime, float time, Color color, UICellParticleMode mode)
+    protected void TickParticles(RandomFloatTicker ticker, float deltaTime, float time, Color color, UICellParticleMode mode)
     {
-        foreach (var elapsed in ticker.TickFloats(deltaTime))
+        foreach (var elapsed in ticker.Tick(deltaTime))
             particleFactory.Launch(elapsed, scaleContainer.transform, color, time, mode);
     }
 
@@ -483,7 +478,6 @@ internal abstract class AbstractCellHud<C, T> : MonoBehaviour where C : Abstract
 
     protected abstract Color SineWaveColor();
 
-
     private static readonly float OFFSET_Y = 0;
 
     private SineWaveLauncher sineWaveLauncher;
@@ -503,6 +497,8 @@ internal abstract class AbstractCellHud<C, T> : MonoBehaviour where C : Abstract
         cells.Add(newCell);
     }
 
+    private float sineWavePrewarm = 60;
+
     protected void Update()
     {
         var cellStates = GetCellStates();
@@ -517,6 +513,7 @@ internal abstract class AbstractCellHud<C, T> : MonoBehaviour where C : Abstract
         while (cells.Count < cellStates.Count) AddCell(cellStates[cells.Count]);
 
         sineWaveLauncher ??= new(OffsetSign() == 1);
-        sineWaveLauncher.Update(Time.deltaTime, transform.parent, OffsetSign(), SineWaveDist(), SineWaveFade(), SineWaveColor());
+        sineWaveLauncher.Update(Time.deltaTime + sineWavePrewarm, transform.parent, OffsetSign(), SineWaveDist(), SineWaveFade(), SineWaveColor());
+        sineWavePrewarm = 0;
     }
 }
