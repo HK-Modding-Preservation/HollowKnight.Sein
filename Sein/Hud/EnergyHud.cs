@@ -44,7 +44,7 @@ internal class EnergyCell : AbstractUICell<EnergyCell, EnergyCellState>
             TickParticles(unlockTicker, Time.deltaTime, SOUL_UNLOCK_TIME, SOUL_COLOR, UICellParticleMode.Outwards);
     }
 
-    private static Color SOUL_COLOR = Hex(172, 195, 255);
+    internal static Color SOUL_COLOR = Hex(172, 195, 255);
     private static Color LOCKED_SOUL_COLOR = SOUL_COLOR.Darker(0.45f);
     private static Color DEAD_SOUL_COLOR = Hex(40, 58, 140);
 
@@ -60,7 +60,11 @@ internal class EnergyCell : AbstractUICell<EnergyCell, EnergyCellState>
 
     protected override Sprite GetCoverSprite(int index) => index == 0 ? firstCover.Value : otherCover.Value;
 
-    protected override Color GetFrameColor(EnergyCellState state) => GetBodyColor(state).Darker(0.25f);
+    protected override Color GetFrameColor(EnergyCellState state)
+    {
+        if (state.fillState == EnergyCellFillState.Shattered) return GetBodyColor(state).Darker(0.7f);
+        else return GetBodyColor(state).Darker(0.25f);
+    }
 
     protected override bool StateIsPermanent(EnergyCellState state) => true;
 }
@@ -68,6 +72,17 @@ internal class EnergyCell : AbstractUICell<EnergyCell, EnergyCellState>
 internal class EnergyHud : AbstractCellHud<EnergyCell, EnergyCellState>
 {
     protected override int OffsetSign() => -1;
+
+    protected override float SineWaveDist() => 2;
+
+    protected override float SineWaveFade() => 5;
+
+    protected override Color SineWaveColor()
+    {
+        var c = EnergyCell.SOUL_COLOR.Darker(0.2f);
+        c.a = 0.5f;
+        return c;
+    }
 
     protected override EnergyCellState EmptyCellState() => new();
 

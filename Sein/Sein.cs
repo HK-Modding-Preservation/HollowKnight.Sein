@@ -1,6 +1,7 @@
 using Modding;
 using PurenailCore.ModUtil;
 using Sein.Effects;
+using Sein.Util;
 using System;
 
 namespace Sein;
@@ -35,6 +36,7 @@ public class SeinMod : Mod
         HivebloodWatcher.Hook();
         Hud.HudAttacher.Hook();
         Orb.Hook();
+        PlayerDataCache.Hook();
         Regenerate.Hook();
         SkinWatcher.Hook();
         ILHooks.Hook();

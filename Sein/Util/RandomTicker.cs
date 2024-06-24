@@ -20,11 +20,13 @@ internal class RandomTicker
     // So for a non-random ticker that always takes 5 ticks per event, Tick(3) would yield nothing, a subsequent Tick(21) would yield [2, 7, 12, 17], and a tertiary Tick(5) would yield [1].
     public IEnumerable<int> Tick(int ticks)
     {
+        int consumed = 0;
         while (next <= ticks)
         {
-            yield return next;
+            consumed += next;
+            yield return consumed;
             ticks -= next;
-            next = UnityEngine.Random.Range(min, max + 1);
+            next = Random.Range(min, max + 1);
         }
 
         next -= ticks;
@@ -51,16 +53,7 @@ internal class PeriodicFloatTicker
         var prevFloat = prevInt * floatPeriod / intPeriod;
         var newInt = Mathf.FloorToInt((prevFloat + ticks) * intPeriod / floatPeriod);
 
-        float consumed = 0;
-        var tick = prevInt;
-        foreach (var next in ticker.Tick(newInt - prevInt))
-        {
-            consumed += next * floatPeriod / intPeriod;
-            tick += next;
-            tick %= intPeriod;
-            yield return consumed;
-        }
-
+        foreach (var consumed in ticker.Tick(newInt - prevInt)) yield return consumed * floatPeriod / intPeriod;
         prevInt = newInt % intPeriod;
     }
 }

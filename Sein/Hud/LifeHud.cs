@@ -36,7 +36,7 @@ internal class LifeCell : AbstractUICell<LifeCell, LifeCellState>
     private static readonly Color FURY_COLOR = Hex(170, 44, 22);
     private static readonly Color LIFEBLOOD_COLOR = Hex(93, 183, 209);
     private static readonly Color HIVEBLOOD_COLOR = Hex(245, 153, 52);
-    private static readonly Color LIFE_COLOR = Hex(201, 233, 97);
+    internal static readonly Color LIFE_COLOR = Hex(201, 233, 97);
 
     protected override Color GetBodyColor(LifeCellState state)
     {
@@ -91,7 +91,32 @@ internal class LifeHud : AbstractCellHud<LifeCell, LifeCellState>
 {
     protected override int OffsetSign() => 1;
 
+    protected override float SineWaveDist()
+    {
+        var last = GetLastPermanentCell();
+        return Mathf.Min(3.5f, last?.transform.localPosition.x ?? 3.5f);
+    }
+
+    protected override float SineWaveFade() => 8;
+
+    protected override Color SineWaveColor()
+    {
+        var c = LifeCell.LIFE_COLOR.Darker(0.2f);
+        c.a = 0.5f;
+        return c;
+    }
+
     protected override LifeCellState EmptyCellState() => new() { fillState = LifeCellFillState.Empty };
+
+    protected LifeCell? GetLastPermanentCell()
+    {
+        var states = GetCellStates();
+        int index = -1;
+        for (int i = 0; i < states.Count && i < cells.Count; i++) if (states[i].permanent) index = i;
+
+        if (index == -1) return null;
+        return cells[index];
+    }
 
     protected override List<LifeCellState> GetCellStates()
     {
@@ -100,7 +125,7 @@ internal class LifeHud : AbstractCellHud<LifeCell, LifeCellState>
         var health = pd.GetInt(nameof(PlayerData.health));
         var maxHealth = pd.GetInt(nameof(PlayerData.maxHealth));
         var healthBlue = pd.GetInt(nameof(PlayerData.healthBlue));
-        bool hiveblood = HivebloodWatcher.HivebloodEquipped;
+        bool hiveblood = PlayerDataCache.instance.HivebloodEquipped;
         bool hivebloodHealing = HivebloodWatcher.HivebloodHealing;
         bool jonis = pd.GetBool(nameof(PlayerData.equippedCharm_27));
         bool furied = false;  // TODO: Handle fury

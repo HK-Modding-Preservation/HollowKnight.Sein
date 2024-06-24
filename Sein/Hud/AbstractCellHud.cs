@@ -4,6 +4,119 @@ using UnityEngine;
 
 namespace Sein.Hud;
 
+internal class SineWaveParticleFactory : UIParticleFactory<SineWaveParticleFactory, SineWaveParticle>
+{
+    private readonly bool lifeHud;
+
+    internal SineWaveParticleFactory(bool lifeHud) => this.lifeHud = lifeHud;
+
+    protected override string GetObjectName() => "SineWave";
+
+    protected override Sprite GetSprite() => SineWaveParticle.sprite1.Value;
+
+    protected override int SortingOrder => UICellSortingOrder.SINE_WAVE_ORDER;
+
+    public void Launch(float prewarm, Transform parent, int dir, float speed, float fadeDist, float fadeLength, Color color, bool up)
+    {
+        if (!Launch(prewarm, (fadeDist + fadeLength) / speed, out var particle)) return;
+
+        particle.SetParams(lifeHud, parent, dir, fadeDist, fadeLength, color, up);
+        particle.Finalize(prewarm);
+    }
+}
+
+internal class SineWaveParticle : AbstractParticle<SineWaveParticleFactory, SineWaveParticle>
+{
+    public const float SCALE_X = 0.45f;
+    public const float SCALE_Y = 1.25f;
+    private const float OVERCHARM_TIME = 1f;
+
+    internal static IC.EmbeddedSprite sprite1 = new("sinewave1");
+    internal static IC.EmbeddedSprite sprite2 = new("sinewave2");
+
+    private bool lifeHud;
+    private SpriteRenderer spriteRenderer;
+    private float fadeProg;
+    private float baseAlpha;
+    private Vector3 target;
+
+    internal void SetParams(bool lifeHud, Transform parent, int dir, float fadeDist, float fadeLength, Color color, bool up)
+    {
+        spriteRenderer ??= gameObject.GetComponent<SpriteRenderer>();
+
+        this.lifeHud = lifeHud;
+        fadeProg = fadeDist / (fadeDist + fadeLength);
+        target = new(dir * (fadeDist + fadeLength), 0, 0);
+        spriteRenderer.color = color;
+        spriteRenderer.sprite = (up ? sprite1 : sprite2).Value;
+        baseAlpha = color.a;
+        transform.parent = parent;
+    }
+
+    protected override bool UseLocalPos => true;
+
+    protected override float GetAlpha()
+    {
+        if (Progress < fadeProg) return baseAlpha;
+        else return baseAlpha * (1 - (Progress - fadeProg) / (1 - fadeProg));
+    }
+
+    protected override Vector3 GetPos() => Progress * target;
+
+    protected override Vector3 GetScale() => new(SCALE_X, SCALE_Y * (0.1f + 0.9f * Mathf.Pow(RProgress, 0.65f)), 1);
+
+    private Color? origColor;
+    private ProgressFloat overcharmProg = new(0, 1, 1);
+
+    protected override bool UpdateForTime(float time)
+    {
+        if (!base.UpdateForTime(time))
+        {
+            if (origColor != null) spriteRenderer.color = origColor.Value;
+            return false;
+        }
+
+        if (!lifeHud) return true;
+
+        origColor ??= spriteRenderer.color;
+        var oc = origColor.Value;
+        oc.a = GetAlpha();
+        bool overcharmed = PlayerDataCache.instance.Overcharmed;
+        overcharmProg.Advance(time, overcharmed ? OVERCHARM_TIME : 0);
+        var target = Color.magenta.Darker(0.1f);
+        target.a = 0.8f * (GetAlpha() / 0.5f);
+        spriteRenderer.color = oc.Interpolate(overcharmProg.Value / OVERCHARM_TIME, target);
+
+        return true;
+    }
+
+    protected override SineWaveParticle Self() => this;
+}
+
+internal class SineWaveLauncher
+{
+    private static readonly float SPEED = 0.2f;
+    private static readonly float SPAN = 0.539f;
+    private static float RATE = SPEED / SPAN;
+    private const int TICKS_PER_SECOND = 1000;
+    private static readonly int TICKS_PER_WAVE = Mathf.FloorToInt(TICKS_PER_SECOND / RATE);
+
+    private readonly SineWaveParticleFactory particleFactory;
+    private readonly PeriodicFloatTicker ticker = new(1, TICKS_PER_SECOND, TICKS_PER_WAVE, TICKS_PER_WAVE);
+    private bool up = true;
+
+    internal SineWaveLauncher(bool lifeHud) => this.particleFactory = new(lifeHud);
+
+    public void Update(float time, Transform parent, int dir, float fadeDist, float fadeLength, Color color)
+    {
+        foreach (var used in ticker.TickFloats(time))
+        {
+            particleFactory.Launch(used, parent, dir, SPEED, fadeDist, fadeLength, color, up);
+            up = !up;
+        }
+    }
+}
+
 public enum UICellParticleMode
 {
     Inwards,
@@ -13,15 +126,13 @@ public enum UICellParticleMode
 
 internal class UICellParticleFactory : UIParticleFactory<UICellParticleFactory, UICellParticle>
 {
-
-
     private static IC.EmbeddedSprite sprite = new("cellbody");
 
     protected override string GetObjectName() => "CellParticle";
 
     protected override Sprite GetSprite() => sprite.Value;
 
-    protected override int SortingOrder => 1;
+    protected override int SortingOrder => UICellSortingOrder.PARTICLE_ORDER;
 
     public void Launch(float prewarm, Transform parent, Color color, float time, UICellParticleMode mode)
     {
@@ -137,6 +248,16 @@ internal static class AbstractUICellFactory
     }
 }
 
+internal static class UICellSortingOrder
+{
+    public const int SINE_WAVE_ORDER = -3;
+    public const int BG_ORDER = -2;
+    public const int BODY_ORDER = -1;
+    public const int PARTICLE_ORDER = 1;
+    public const int FRAME_ORDER = 2;
+    public const int COVER_ORDER = 3;
+}
+
 internal abstract class AbstractUICell<C, T> : MonoBehaviour where C : AbstractUICell<C, T>
 {
     private static IC.EmbeddedSprite bgSprite = new("cellbg");
@@ -145,12 +266,6 @@ internal abstract class AbstractUICell<C, T> : MonoBehaviour where C : AbstractU
 
     private const float LARGE_CELL_SCALE = 0.65f;
     private const float SMALL_CELL_SCALE = 0.425f;
-
-    private const int BG_ORDER = -2;
-    private const int BODY_ORDER = -1;
-    private const int PARTICLE_ORDER = 1;  // Must be 1.
-    private const int FRAME_ORDER = 2;
-    private const int COVER_ORDER = 3;
     private static float BG_ALPHA = 0.75f;
     private static float COVER_GRAY = 0.95f;
     private static float COVER_ALPHA = 0.45f;
@@ -203,21 +318,21 @@ internal abstract class AbstractUICell<C, T> : MonoBehaviour where C : AbstractU
         var scale = previousCell != null ? SMALL_CELL_SCALE : LARGE_CELL_SCALE;
         scaleContainer.transform.localScale = new(scale, scale, 1);
 
-        (bg, bgRenderer) = UISprites.CreateUISprite("CellBG", bgSprite.Value, BG_ORDER);
+        (bg, bgRenderer) = UISprites.CreateUISprite("CellBG", bgSprite.Value, UICellSortingOrder.BG_ORDER);
         bg.transform.parent = scaleContainer.transform;
         bgRenderer.SetAlpha(BG_ALPHA);
         bg.SetActive(false);
 
-        (body, bodyRenderer) = UISprites.CreateUISprite("CellBody", bodySprite.Value, BODY_ORDER);
+        (body, bodyRenderer) = UISprites.CreateUISprite("CellBody", bodySprite.Value, UICellSortingOrder.BODY_ORDER);
         body.transform.parent = scaleContainer.transform;
         bodyRenderer.color = prevBodyColor;
         body.SetActive(false);
 
-        (frame, frameRenderer) = UISprites.CreateUISprite("CellFrame", frameSprite.Value, FRAME_ORDER);
+        (frame, frameRenderer) = UISprites.CreateUISprite("CellFrame", frameSprite.Value, UICellSortingOrder.FRAME_ORDER);
         frame.transform.parent = scaleContainer.transform;
         frame.SetActive(false);
 
-        (cover, coverRenderer) = UISprites.CreateUISprite("CellCover", GetCoverSprite(index), COVER_ORDER);
+        (cover, coverRenderer) = UISprites.CreateUISprite("CellCover", GetCoverSprite(index), UICellSortingOrder.COVER_ORDER);
         cover.transform.parent = scaleContainer.transform;
         cover.transform.localRotation = Quaternion.Euler(0, 0, index == 0 ? 0 : (ModPow(5, (index - 1), 23) * 15));
         coverRenderer.color = COVER_COLOR;
@@ -362,11 +477,18 @@ internal abstract class AbstractCellHud<C, T> : MonoBehaviour where C : Abstract
         else return LARGE_OFFSET_X;
     }
 
+    protected abstract float SineWaveDist();
+
+    protected abstract float SineWaveFade();
+
+    protected abstract Color SineWaveColor();
+
 
     private static readonly float OFFSET_Y = 0;
 
+    private SineWaveLauncher sineWaveLauncher;
     private UICellParticleFactory particleFactory = new();
-    private List<C> cells = new();
+    protected List<C> cells = new();
 
     protected abstract List<T> GetCellStates();
 
@@ -393,5 +515,8 @@ internal abstract class AbstractCellHud<C, T> : MonoBehaviour where C : Abstract
         }
         // Add any missing cells.
         while (cells.Count < cellStates.Count) AddCell(cellStates[cells.Count]);
+
+        sineWaveLauncher ??= new(OffsetSign() == 1);
+        sineWaveLauncher.Update(Time.deltaTime, transform.parent, OffsetSign(), SineWaveDist(), SineWaveFade(), SineWaveColor());
     }
 }

@@ -15,8 +15,6 @@ internal class HivebloodWatcher
         ItemChanger.Events.AddFsmEdit(new("Blue Health Hive(Clone)", "blue_health_display"), WatchJoniblood);
     }
 
-    public static bool HivebloodEquipped => PlayerData.instance.GetBool(nameof(PlayerData.equippedCharm_29));
-
     public static bool HivebloodHealing { get; private set; }
 
     private static void WatchHiveblood(PlayMakerFSM fsm)

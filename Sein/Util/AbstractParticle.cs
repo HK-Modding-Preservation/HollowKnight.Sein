@@ -92,7 +92,7 @@ internal abstract class AbstractParticle<F, P> : MonoBehaviour where F : Abstrac
 
     internal void Finalize(float prewarm)
     {
-        Update(prewarm);
+        UpdateForTime(prewarm);
         gameObject.SetActive(true);
     }
 
@@ -104,16 +104,16 @@ internal abstract class AbstractParticle<F, P> : MonoBehaviour where F : Abstrac
 
     protected abstract float GetAlpha();
 
-    private void Update() => Update(Time.deltaTime);
+    private void Update() => UpdateForTime(Time.deltaTime);
 
-    protected virtual void Update(float time)
+    protected virtual bool UpdateForTime(float time)
     {
         age += time;
         if (age >= lifetime)
         {
             gameObject.SetActive(false);
             pool.Return(Self());
-            return;
+            return false;
         }
 
         var pos = GetPos();
@@ -122,6 +122,7 @@ internal abstract class AbstractParticle<F, P> : MonoBehaviour where F : Abstrac
 
         transform.localScale = GetScale();
         spriteRenderer.SetAlpha(GetAlpha());
+        return true;
     }
 }
 
