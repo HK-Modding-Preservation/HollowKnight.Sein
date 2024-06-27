@@ -102,6 +102,8 @@ internal abstract class AbstractParticle<F, P> : MonoBehaviour where F : Abstrac
 
     protected abstract Vector3 GetScale();
 
+    protected virtual Quaternion GetRotation() => Quaternion.identity;
+
     protected abstract float GetAlpha();
 
     private void Update() => UpdateForTime(Time.deltaTime);
@@ -121,6 +123,7 @@ internal abstract class AbstractParticle<F, P> : MonoBehaviour where F : Abstrac
         else transform.position = pos;
 
         transform.localScale = GetScale();
+        transform.localRotation = GetRotation();
         spriteRenderer.SetAlpha(GetAlpha());
         return true;
     }
