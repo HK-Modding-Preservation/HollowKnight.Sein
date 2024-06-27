@@ -6,6 +6,7 @@ Desolate Dive=>Spirit Smash
 Focus=>Regenerate
 Gathering Swarm=>Magnet
 Howling Wraiths=>Spike
+Lumafly Lantern=>Flash
 Mantis Claw=>Grapple
 Mask Shard=>Life Fragment
 Monarch Wings=>Double Jump
