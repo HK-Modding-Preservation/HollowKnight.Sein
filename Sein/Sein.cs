@@ -35,10 +35,10 @@ public class SeinMod : Mod
     {
         HivebloodWatcher.Hook();
         Hud.HudAttacher.Hook();
+        ILHooks.Hook();
         Orb.Hook();
         PlayerDataCache.Hook();
         Regenerate.Hook();
         SkinWatcher.Hook();
-        ILHooks.Hook();
     }
 }
