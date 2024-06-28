@@ -70,7 +70,7 @@ internal class RegenerateParticle : AbstractParticle<RegenerateParticleFactory, 
 
 internal class Regenerator : MonoBehaviour
 {
-    private const float PARTICLE_RATE = 28f;
+    private const float PARTICLE_RATE = 45f;
     private const float X_OFFSET = 0.27f;
     private const float Y_OFFSET = 0.38f;
 
