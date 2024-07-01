@@ -429,7 +429,7 @@ internal abstract class AbstractUICell<C, T> : MonoBehaviour where C : AbstractU
         cover.transform.localScale = new(scale, scale, 1);
     }
 
-    protected static RandomFloatTicker RatedTicker(float rate) => new(0.9f * rate, 1.1f * rate);
+    protected static RandomFloatTicker RatedTicker(float rate) => new(0.9f / rate, 1.1f / rate);
 
     protected void TickParticles(RandomFloatTicker ticker, float deltaTime, float time, Color color, UICellParticleMode mode)
     {
