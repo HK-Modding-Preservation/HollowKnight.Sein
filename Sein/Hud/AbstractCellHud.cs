@@ -181,13 +181,19 @@ internal class UICellParticle : AbstractParticle<UICellParticleFactory, UICellPa
         }
     }
 
+    private const float DRIP_ALPHA_THRESHOLD = 0.2f;
+
     private float AlphaValue()
     {
         switch (mode)
         {
             case UICellParticleMode.Inwards: return Mathf.Sqrt(Progress);
             case UICellParticleMode.Outwards: return Mathf.Sqrt(RProgress);
-            case UICellParticleMode.Drip: return RProgress;
+            case UICellParticleMode.Drip:
+                {
+                    if (Progress < DRIP_ALPHA_THRESHOLD) return Progress / DRIP_ALPHA_THRESHOLD;
+                    else return 1 - (Progress - DRIP_ALPHA_THRESHOLD) / (1 - DRIP_ALPHA_THRESHOLD);
+                }
             default: return Progress;
         }
     }
