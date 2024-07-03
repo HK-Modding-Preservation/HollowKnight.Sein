@@ -191,9 +191,9 @@ internal class SpiritLightHud : MonoBehaviour
         container = AddSprite("Container", hudSprite.Value, 0);
         light = AddSprite("Light", lightSprite.Value, 1);
 
-        spiritLightText = CloneTextMesh("Counter", realGeoText, new(0, -2.1f, 0));
-        spiritLightAddText = CloneTextMesh("Adder", realGeoAddText, new(0, -2.8f, 0));
-        spiritLightSubtractText = CloneTextMesh("Subtractor", realGeoSubtractText, new(0, -2.8f, 0));
+        spiritLightText = UISprites.CloneTextMesh("Counter", realGeoText, transform, new(0, -2.1f, 0));
+        spiritLightAddText = UISprites.CloneTextMesh("Adder", realGeoAddText, transform, new(0, -2.8f, 0));
+        spiritLightSubtractText = UISprites.CloneTextMesh("Subtractor", realGeoSubtractText, transform, new(0, -2.8f, 0));
 
         spiritParticleUpdater = new(spriteContainer.transform);
 
@@ -241,23 +241,6 @@ internal class SpiritLightHud : MonoBehaviour
         obj.transform.localScale = new(1, 1, 1);
         obj.transform.localPosition = Vector3.zero;
         return obj;
-    }
-
-    private TextMesh CloneTextMesh(string name, TextMesh prefab, Vector3 offset)
-    {
-        GameObject obj = Instantiate(prefab.gameObject);
-        foreach (var fsm in obj.GetComponents<PlayMakerFSM>()) Destroy(fsm);
-        obj.transform.SetParent(transform);
-        obj.transform.localPosition = offset;
-
-        obj.GetComponent<MeshRenderer>().sortingOrder = 2;
-
-        var text = obj.GetComponent<TextMesh>();
-        text.alignment = TextAlignment.Center;
-        text.anchor = TextAnchor.MiddleCenter;
-        text.fontSize = 36;
-
-        return text;
     }
 
     private SpiritParticleUpdater spiritParticleUpdater;
