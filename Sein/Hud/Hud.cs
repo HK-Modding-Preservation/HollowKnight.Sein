@@ -53,8 +53,9 @@ internal class Hud : PersistentMonoBehaviour
         energyHud.AddComponent<EnergyHud>();
     }
 
-    protected void OnDestroy()
+    protected override void OnDestroy()
     {
+        base.OnDestroy();
         Destroy(oriHud);
     }
 
