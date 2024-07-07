@@ -2,6 +2,7 @@ using Modding;
 using PurenailCore.ModUtil;
 using Sein.Effects;
 using Sein.Util;
+using Sein.Watchers;
 using System;
 
 namespace Sein;
@@ -33,6 +34,7 @@ public class SeinMod : Mod
 
     public override void Initialize()
     {
+        EssenceWatcher.Hook();
         HivebloodWatcher.Hook();
         Hud.HudAttacher.Hook();
         ILHooks.Hook();

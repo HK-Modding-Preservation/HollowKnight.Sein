@@ -4,12 +4,14 @@ namespace Sein.Util;
 
 internal static class GameObjectExtensions
 {
-    public static void SetAlpha(this SpriteRenderer self, float alpha)
+    public static Color WithAlpha(this Color self, float alpha)
     {
-        var c = self.color;
+        var c = self;
         c.a = alpha;
-        self.color = c;
+        return c;
     }
+
+    public static void SetAlpha(this SpriteRenderer self, float alpha) => self.color = self.color.WithAlpha(alpha);
 
     private static float Interploate(float a, float f, float b) => a + (b - a) * f;
 

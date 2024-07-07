@@ -1,4 +1,5 @@
 ﻿using Sein.Util;
+using Sein.Watchers;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -41,6 +42,11 @@ internal class Hud : PersistentMonoBehaviour
         spiritLightHud.transform.SetParent(oriHud.transform);
         spiritLightHud.transform.localPosition = Vector3.zero;
         spiritLightHud.AddComponent<SpiritLightHud>();
+
+        GameObject essenceHud = new("EssenceHud");
+        essenceHud.transform.SetParent(oriHud.transform);
+        essenceHud.transform.localPosition = new(2.55f, -1.15f, 0);
+        essenceHud.AddComponent<EssenceHud>();
 
         GameObject lifeHud = new("LifeHud");
         lifeHud.transform.SetParent(oriHud.transform);

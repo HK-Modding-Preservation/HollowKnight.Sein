@@ -1,7 +1,7 @@
 ﻿using CustomKnight;
 using UnityEngine;
 
-namespace Sein;
+namespace Sein.Watchers;
 
 // TODO: There should be a hook for this in CustomKnight
 internal class SkinWatcher : MonoBehaviour

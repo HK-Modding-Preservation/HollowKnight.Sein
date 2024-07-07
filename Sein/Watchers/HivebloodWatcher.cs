@@ -1,7 +1,7 @@
 ﻿using ItemChanger.Extensions;
 using ItemChanger.FsmStateActions;
 
-namespace Sein;
+namespace Sein.Watchers;
 
 internal class HivebloodWatcher
 {
