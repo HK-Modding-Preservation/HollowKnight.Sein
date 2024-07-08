@@ -36,6 +36,7 @@ internal class Hud : PersistentMonoBehaviour
 
         UpdateOriState(SkinWatcher.OriActive());
         SkinWatcher.OnSkinToggled += UpdateOriState;
+        SeinSettings.OnSettingsChanged += SettingsChanged;
 
         // Local position center
         GameObject spiritLightHud = new("SpiritLightHud");
@@ -61,14 +62,20 @@ internal class Hud : PersistentMonoBehaviour
 
     protected override void OnDestroy()
     {
-        base.OnDestroy();
+        SkinWatcher.OnSkinToggled -= UpdateOriState;
+        SeinSettings.OnSettingsChanged -= SettingsChanged;
+
         Destroy(oriHud);
+        base.OnDestroy();
     }
 
     private bool isOriActive = false;
 
+    private void SettingsChanged(SeinSettings settings) => UpdateOriState(SkinWatcher.OriActive());
+
     private void UpdateOriState(bool oriActive)
     {
+        oriActive &= SeinSettings.Instance.EnableHud;
         if (isOriActive == oriActive) return;
 
         isOriActive = oriActive;

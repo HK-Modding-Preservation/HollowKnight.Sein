@@ -32,7 +32,7 @@ internal static class ILHooks
     {
         doDoubleJumpHook = HookOrig<HeroController>(OverrideDoDoubleJump, "DoDoubleJump", BindingFlags.NonPublic | BindingFlags.Instance);
         heroDashHook = HookOrig<HeroController>(OverrideHeroDash, "HeroDash", BindingFlags.NonPublic | BindingFlags.Instance);
-        playSoundHook = HookOrig<HeroAudioController>(OverridePlaySound, "PlaySound", BindingFlags.Public | BindingFlags.Instance);
+        playSoundHook = HookOrig<HeroAudioController>(OverridePlayMovementSound, "PlaySound", BindingFlags.Public | BindingFlags.Instance);
 
         On.GeoControl.OnEnable += ChangeGeoSounds;
         On.HeroController.DoDoubleJump += SpawnDoubleJumpWave;
@@ -46,7 +46,7 @@ internal static class ILHooks
         cursor.Remove();
         cursor.EmitDelegate(MaybePlayParticleSystem);
         cursor.GotoNext(MoveType.After, i => i.MatchLdfld<HeroController>("doubleJumpClip"));
-        cursor.EmitDelegate(OverrideAudioClip(doubleJumps));
+        cursor.EmitDelegate(OverrideMovementAudioClip(doubleJumps));
     }
 
     private static void MaybePlayParticleSystem(ParticleSystem sys)
@@ -69,24 +69,24 @@ internal static class ILHooks
         ILCursor cursor = new(ctx);
 
         cursor.GotoNext(MoveType.After, i => i.MatchLdfld<HeroController>("sharpShadowClip"));
-        cursor.EmitDelegate(OverrideAudioClip([sharpShadowDash]));
+        cursor.EmitDelegate(OverrideMovementAudioClip([sharpShadowDash]));
         cursor.GotoNext(MoveType.After, i => i.MatchLdfld<HeroController>("shadowDashClip"));
-        cursor.EmitDelegate(OverrideAudioClip([shadowDash]));
+        cursor.EmitDelegate(OverrideMovementAudioClip([shadowDash]));
     }
 
-    private static void OverridePlaySound(ILContext ctx)
+    private static void OverridePlayMovementSound(ILContext ctx)
     {
         ILCursor cursor = new(ctx);
 
         cursor.GotoNext(MoveType.After, i => i.MatchLdfld<HeroAudioController>("dash"));
-        cursor.EmitDelegate(OverrideAudioSource("dash", [dash]));
+        cursor.EmitDelegate(OverrideMovementAudioSource("dash", [dash]));
     }
 
-    private static Func<AudioClip, AudioClip> OverrideAudioClip(List<AudioClip> replacements)
+    private static Func<AudioClip, AudioClip> OverrideMovementAudioClip(List<AudioClip> replacements)
     {
         AudioClip Replace(AudioClip orig)
         {
-            return SeinMod.OriActive() ? replacements[UnityEngine.Random.Range(0, replacements.Count)] : orig;
+            return (SeinMod.OriActive() && SeinSettings.Instance.EnableMovementSounds) ? replacements[UnityEngine.Random.Range(0, replacements.Count)] : orig;
         }
 
         return Replace;
@@ -95,12 +95,12 @@ internal static class ILHooks
 
     private static Dictionary<string, AudioClip> origAudioClips = new();
 
-    private static Func<AudioSource, AudioSource> OverrideAudioSource(string name, List<AudioClip> replacements)
+    private static Func<AudioSource, AudioSource> OverrideMovementAudioSource(string name, List<AudioClip> replacements)
     {
         AudioSource Replace(AudioSource orig)
         {
             if (!origAudioClips.ContainsKey(name)) origAudioClips.Add(name, orig.clip);
-            orig.clip = SeinMod.OriActive() ? replacements[UnityEngine.Random.Range(0, replacements.Count)] : origAudioClips[name];
+            orig.clip = (SeinMod.OriActive() && SeinSettings.Instance.EnableMovementSounds) ? replacements[UnityEngine.Random.Range(0, replacements.Count)] : origAudioClips[name];
 
             return orig;
         }
@@ -113,7 +113,7 @@ internal static class ILHooks
     private static void ChangeGeoSounds(On.GeoControl.orig_OnEnable orig, GeoControl self)
     {
         if (!origAudioClipArrays.ContainsKey("geo")) origAudioClipArrays.Add("geo", self.pickupSounds);
-        self.pickupSounds = SeinMod.OriActive() ? geoCollects.ToArray() : origAudioClipArrays["geo"];
+        self.pickupSounds = (SeinMod.OriActive() && SeinSettings.Instance.EnableGeoSounds) ? geoCollects.ToArray() : origAudioClipArrays["geo"];
 
         orig(self);
     }

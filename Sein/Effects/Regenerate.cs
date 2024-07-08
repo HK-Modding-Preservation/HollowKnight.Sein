@@ -116,7 +116,7 @@ internal class Regenerate
         On.HeroController.StopMPDrain += StopRegenerate;
     }
 
-    private static void SetFocusLines(bool oriEnabled)
+    private static void SetFocusLines(bool oriEnabled, SeinSettings settings)
     {
         GOFinder.Knight().FindChild("Focus Effects").FindChild("Lines Anim").active = !oriEnabled;
     }

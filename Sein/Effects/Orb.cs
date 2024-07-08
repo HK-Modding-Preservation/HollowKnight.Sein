@@ -49,9 +49,9 @@ internal class Orb : MonoBehaviour
 
     private static IC.EmbeddedSprite SeinSprite = new("Sein");
 
-    private static void InstantiateOrb(bool oriEnabled)
+    private static void InstantiateOrb(bool oriEnabled, SeinSettings settings)
     {
-        if (!oriEnabled) return;
+        if (!oriEnabled || !settings.EnableSein) return;
 
         GameObject orb = new("SeinOrb");
         orb.AddComponent<Orb>();
