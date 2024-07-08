@@ -12,6 +12,7 @@ Mask Shard=>Life Fragment
 Monarch Wings=>Double Jump
 Mothwing Cloak=>Dash
 Simple Key=>Keystone
+Shade Cloak=>Shadow Dash
 Shade Soul=>Light Burst
 Vengeful Spirit=>Spirit Arc
 Vessel Fragment=>Energy Cell
