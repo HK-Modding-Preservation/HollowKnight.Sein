@@ -40,7 +40,7 @@ internal class EssenceHud : MonoBehaviour
 
     protected void Update()
     {
-        textObj.text = PlayerDataCache.instance.EssenceText;
+        textObj.text = PlayerDataCache.Instance.EssenceText;
 
         progress.Advance(Time.deltaTime, EssenceWatcher.EssenceUp ? 1 : 0);
         textObj.color = textObj.color.WithAlpha(progress.Value);

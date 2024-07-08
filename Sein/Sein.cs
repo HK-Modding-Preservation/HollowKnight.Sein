@@ -49,6 +49,7 @@ public class SeinMod : Mod, IGlobalSettings<SeinSettings>, ICustomMenuMod
     public override void Initialize()
     {
         EssenceWatcher.Hook();
+        Flash.Hook();
         HivebloodWatcher.Hook();
         Hud.HudAttacher.Hook();
         ILHooks.Hook();

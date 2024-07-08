@@ -81,7 +81,7 @@ internal class SineWaveParticle : AbstractParticle<SineWaveParticleFactory, Sine
         origColor ??= spriteRenderer.color;
         var oc = origColor.Value;
         oc.a = GetAlpha();
-        bool overcharmed = PlayerDataCache.instance.Overcharmed;
+        bool overcharmed = PlayerDataCache.Instance.Overcharmed;
         overcharmProg.Advance(time, overcharmed ? OVERCHARM_TIME : 0);
         var target = Color.magenta.Darker(0.1f);
         target.a = 0.8f * (GetAlpha() / 0.5f);

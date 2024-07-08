@@ -112,7 +112,7 @@ internal class LifeHud : AbstractCellHud<LifeCell, LifeCellState>
         var health = pd.GetInt(nameof(PlayerData.health));
         var maxHealth = pd.GetInt(nameof(PlayerData.maxHealth));
         var healthBlue = pd.GetInt(nameof(PlayerData.healthBlue));
-        bool hiveblood = PlayerDataCache.instance.HivebloodEquipped;
+        bool hiveblood = PlayerDataCache.Instance.HivebloodEquipped;
         bool hivebloodHealing = HivebloodWatcher.HivebloodHealing;
         bool jonis = pd.GetBool(nameof(PlayerData.equippedCharm_27));
         bool furied = false;  // TODO: Handle fury
