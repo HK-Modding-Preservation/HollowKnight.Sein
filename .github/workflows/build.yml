@@ -44,7 +44,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: Publish
-          path: My Hollow Knight Mod1/bin/Publish
+          path: Sein/bin/Publish
   release:
     needs:
       - build
@@ -75,4 +75,4 @@ jobs:
           body: |
             SHA256: ${{ steps.details.outputs.archiveHash }}
           files: |
-            artifacts/Publish/My_Hollow_Knight_Mod1.zip
+            artifacts/Publish/Sein.zip
