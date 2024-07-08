@@ -29,11 +29,11 @@ internal class SpiritLightFrameParticleFactory : UIParticleFactory<SpiritLightFr
 
 internal class SpiritLightFrameParticle : AbstractParticle<SpiritLightFrameParticleFactory, SpiritLightFrameParticle>
 {
-    private const float FLIGHT_DISTANCE = 0.85f;
-    private const float FLIGHT_SPEED = 0.3f;
+    private const float FLIGHT_DISTANCE = 1.05f;
+    private const float FLIGHT_SPEED = 0.4f;
     internal const float FLIGHT_TIME = FLIGHT_DISTANCE / FLIGHT_SPEED;
-    private const float SPAWN_RADIUS = 2.05f;
-    private const float SCALE_BASE = 1.8f;
+    private const float SPAWN_RADIUS = 1.85f;
+    private const float SCALE_BASE = 1.75f;
 
     private float angle;
 
@@ -121,7 +121,7 @@ internal class SpiritParticleUpdater
     private const float ROT_SPEED = 360f / REVOLUTION_TIME;
     private const float PARTICLES_PER_SECOND = 4.75f;
 
-    private const float FRAME_PARTICLES_PER_SECOND = 15;
+    private const float FRAME_PARTICLES_PER_SECOND = 21;
 
     private readonly SpiritLightParticleFactory spiritLightParticleFactory = new();
     private readonly SpiritLightFrameParticleFactory spiritLightFrameParticleFactory = new();
