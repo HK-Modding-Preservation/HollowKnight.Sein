@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System.Collections.Generic;
+using System.IO;
 
 namespace Sein.DataUpdater;
 
@@ -13,6 +14,8 @@ public class DataUpdater
 
         var root = InferGitRoot(Directory.GetCurrentDirectory());
         var sourcePath = Path.Combine(root, "Ori");
+
+        FixSpriteSheets(sourcePath);
         CopyAllFiles(sourcePath, modPath);
     }
 
@@ -26,6 +29,39 @@ public class DataUpdater
         }
 
         return path;
+    }
+
+    private static void FixSpriteSheets(string path)
+    {
+        Dictionary<string, string> remaps = new()
+        {
+            {"Dream Nail Get Cln", "" },
+            {"Knight Dream Cutscene Cln", "DreamArrival" },
+            {"Knight Dream Gate Cln", "Sprint" },
+            {"Knight Slug Cln", "" },
+            {"Spell Effects 2", "Wraiths" },
+            {"Spell Effects Neutral", "VoidSpells" },
+            {"Spell Effects", "VS" },
+            {"White Wave Lone", "" },
+        };
+
+        foreach (var e in remaps)
+        {
+            var src = e.Key;
+            var dst = e.Value;
+
+            var srcPath = Path.Combine(path, $"{src}.png");
+            var dstPath = Path.Combine(path, $"{dst}.png");
+            if (File.Exists(srcPath))
+            {
+                if (dst.Length == 0) File.Delete(srcPath);
+                else
+                {
+                    File.Delete(dstPath);
+                    File.Move(srcPath, dstPath);
+                }
+            }
+        }
     }
 
     private static void CopyAllFiles(string sourcePath, string targetPath)
