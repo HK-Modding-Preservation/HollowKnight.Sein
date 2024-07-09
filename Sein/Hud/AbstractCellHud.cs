@@ -456,14 +456,14 @@ internal abstract class AbstractUICell<C, T> : MonoBehaviour where C : AbstractU
             particleFactory.Launch(elapsed, scaleContainer.transform, color, time, mode);
     }
 
-    protected abstract void EmitParticles(float bodySize);
+    protected abstract void EmitParticles(float cellSize, float bodySize);
 
     public void Sync(T state)
     {
-        var a = SyncBG(state);
-        var b = SyncBody(state);
-        SyncCover(a, b);
-        EmitParticles(b);
+        var cellSize = SyncBG(state);
+        var bodySize = SyncBody(state);
+        SyncCover(cellSize, bodySize);
+        EmitParticles(cellSize, bodySize);
     }
 }
 

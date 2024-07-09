@@ -74,7 +74,7 @@ internal class LifeCell : AbstractUICell<LifeCell, LifeCellState>
     private RandomFloatTicker hivebloodDripTicker = RatedTicker(HIVEBLOOD_DRIP_PER_SEC);
     private RandomFloatTicker furyDripTicker = RatedTicker(FURY_DRIP_PER_SEC);
 
-    protected override void EmitParticles(float bodySize)
+    protected override void EmitParticles(float cellSize, float bodySize)
     {
         if (bodySize > 0 && bodySize < 1)
         {

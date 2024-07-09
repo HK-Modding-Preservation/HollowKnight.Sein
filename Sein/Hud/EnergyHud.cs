@@ -37,7 +37,7 @@ internal class EnergyCell : AbstractUICell<EnergyCell, EnergyCellState>
     private RandomFloatTicker soulTicker = RatedTicker(SOUL_DRIP_RATE);
     private RandomFloatTicker unlockTicker = RatedTicker(SOUL_UNLOCK_RATE);
 
-    protected override void EmitParticles(float bodySize)
+    protected override void EmitParticles(float cellSize, float bodySize)
     {
         if (targetState.energy > 0 && targetState.fillState == EnergyCellFillState.Active) TickParticles(soulTicker, Time.deltaTime * targetState.energy / 33, SOUL_DRIP_TIME, SOUL_COLOR, UICellParticleMode.Drip);
         if (prevState.fillState != EnergyCellFillState.Active && targetState.fillState == EnergyCellFillState.Active)
