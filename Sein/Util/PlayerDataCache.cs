@@ -16,6 +16,8 @@ internal class PlayerDataCache : MonoBehaviour
 
     public bool HasLantern { get; private set; }
     public bool HivebloodEquipped { get; private set; }
+    public bool QuickFocusEquipped { get; private set; }
+    public bool DeepFocusEquipped { get; private set; }
     public bool Overcharmed { get; private set; }
     public bool Furied { get; private set; }
 
@@ -27,6 +29,8 @@ internal class PlayerDataCache : MonoBehaviour
         var pd = PlayerData.instance;
         HasLantern = pd.GetBool(nameof(PlayerData.hasLantern));
         HivebloodEquipped = pd.GetBool(nameof(PlayerData.equippedCharm_29));
+        QuickFocusEquipped = pd.GetBool(nameof(PlayerData.equippedCharm_7));
+        DeepFocusEquipped = pd.GetBool(nameof(PlayerData.equippedCharm_34));
         Overcharmed = pd.GetBool(nameof(PlayerData.overcharmed));
         Furied = pd.GetBool(nameof(PlayerData.equippedCharm_6)) && pd.GetInt(nameof(PlayerData.health)) == 1 && (pd.GetInt(nameof(PlayerData.healthBlue)) < 1 || !pd.GetBool(nameof(PlayerData.equippedCharm_27)));
 

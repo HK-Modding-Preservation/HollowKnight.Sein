@@ -16,7 +16,10 @@ internal class RegenerateParticleFactory : AbstractParticleFactory<RegeneratePar
 
     public void Launch(float prewarm, Vector3 dest)
     {
-        if (!Launch(prewarm, LIFETIME, out var particle)) return;
+        float lifetime = LIFETIME;
+        if (PlayerDataCache.Instance.QuickFocusEquipped) lifetime /= Regenerator.QUICK_FOCUS_SPEEDUP;
+        if (PlayerDataCache.Instance.DeepFocusEquipped) lifetime *= Regenerator.DEEP_FOCUS_SLOWDOWN;
+        if (!Launch(prewarm, lifetime, out var particle)) return;
 
         particle.SetParams(dest);
         particle.Finalize(prewarm);
@@ -26,6 +29,7 @@ internal class RegenerateParticleFactory : AbstractParticleFactory<RegeneratePar
 internal class RegenerateParticle : AbstractParticle<RegenerateParticleFactory, RegenerateParticle>
 {
     private const float SCALE_BASE = 1.8f;
+    private const float DEEP_FOCUS_SCALE_BASE = 2.9f;
     private const float REVOLUTIONS = 0.55f;
     private const float RADIUS_MIN = 3.5f;
     private const float RADIUS_MAX = 6f;
@@ -34,6 +38,7 @@ internal class RegenerateParticle : AbstractParticle<RegenerateParticleFactory, 
     private float rotBase;
     private Vector3 center;
     private Vector3 radial;
+    private float scaleBase;
 
     internal void SetParams(Vector3 center)
     {
@@ -43,6 +48,7 @@ internal class RegenerateParticle : AbstractParticle<RegenerateParticleFactory, 
         var radius = Random.Range(RADIUS_MIN, RADIUS_MAX);
         var angle = Random.Range(0, 360f);
         this.radial = center + Quaternion.Euler(0, 0, angle) * new Vector3(radius, 0, 0);
+        this.scaleBase = PlayerDataCache.Instance.DeepFocusEquipped ? DEEP_FOCUS_SCALE_BASE : SCALE_BASE;
     }
 
     protected override float GetAlpha()
@@ -55,7 +61,7 @@ internal class RegenerateParticle : AbstractParticle<RegenerateParticleFactory, 
 
     protected override Vector3 GetScale()
     {
-        var scale = SCALE_BASE * (1 + Progress) / 2;
+        var scale = scaleBase * (1 + Progress) / 2;
         return new(scale, scale, 1);
     }
 
@@ -70,7 +76,10 @@ internal class RegenerateParticle : AbstractParticle<RegenerateParticleFactory, 
 
 internal class Regenerator : MonoBehaviour
 {
-    private const float PARTICLE_RATE = 45f;
+    public const float QUICK_FOCUS_SPEEDUP = 1.75f;
+    public const float DEEP_FOCUS_SLOWDOWN = 1.6f;
+
+    private const float PARTICLE_RATE = 65f;
     private const float X_OFFSET = 0.27f;
     private const float Y_OFFSET = 0.38f;
 
@@ -93,7 +102,9 @@ internal class Regenerator : MonoBehaviour
         var pos = t.position;
         pos.x += X_OFFSET * Mathf.Sign(t.localScale.x);
         pos.y += Y_OFFSET;
-        foreach (var elapsed in ticker.Tick(Time.deltaTime)) particleFactory.Launch(elapsed, pos);
+
+        float speedup = PlayerDataCache.Instance.QuickFocusEquipped ? QUICK_FOCUS_SPEEDUP : 1f;
+        foreach (var elapsed in ticker.Tick(Time.deltaTime * speedup)) particleFactory.Launch(elapsed / speedup, pos);
     }
 }
 
