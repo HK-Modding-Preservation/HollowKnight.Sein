@@ -29,6 +29,7 @@ internal class SineWaveParticle : AbstractParticle<SineWaveParticleFactory, Sine
 {
     public const float SCALE_X = 0.45f;
     public const float SCALE_Y = 1.25f;
+    private const float FURY_TIME = 0.5f;
     private const float OVERCHARM_TIME = 1f;
 
     internal static IC.EmbeddedSprite sprite1 = new("sinewave1");
@@ -66,6 +67,7 @@ internal class SineWaveParticle : AbstractParticle<SineWaveParticleFactory, Sine
     protected override Vector3 GetScale() => new(SCALE_X, SCALE_Y * (0.1f + 0.9f * Mathf.Pow(RProgress, 0.65f)), 1);
 
     private Color? origColor;
+    private ProgressFloat furyProg = new(0, 1, 1);
     private ProgressFloat overcharmProg = new(0, 1, 1);
 
     protected override bool UpdateForTime(float time)
@@ -81,11 +83,22 @@ internal class SineWaveParticle : AbstractParticle<SineWaveParticleFactory, Sine
         origColor ??= spriteRenderer.color;
         var oc = origColor.Value;
         oc.a = GetAlpha();
+
         bool overcharmed = PlayerDataCache.Instance.Overcharmed;
         overcharmProg.Advance(time, overcharmed ? OVERCHARM_TIME : 0);
-        var target = Color.magenta.Darker(0.1f);
-        target.a = 0.8f * (GetAlpha() / 0.5f);
-        spriteRenderer.color = oc.Interpolate(overcharmProg.Value / OVERCHARM_TIME, target);
+        var overcharmedTarget = Color.magenta.Darker(0.1f);
+        overcharmedTarget.a = 0.8f * (GetAlpha() / 0.5f);
+        var overcharmedColor = oc.Interpolate(overcharmProg.Value / OVERCHARM_TIME, overcharmedTarget);
+
+        bool fury = PlayerDataCache.Instance.Furied;
+        furyProg.Advance(time, fury ? FURY_TIME : 0);
+        if (furyProg.Value > 0)
+        {
+            var furyTarget = Color.red.Darker(0.35f);
+            furyTarget.a = 0.9f * (GetAlpha() / 0.5f);
+            spriteRenderer.color = overcharmedColor.Interpolate(furyProg.Value / FURY_TIME, furyTarget);
+        }
+        else spriteRenderer.color = overcharmedColor;
 
         return true;
     }

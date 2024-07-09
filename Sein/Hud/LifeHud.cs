@@ -34,7 +34,7 @@ internal class LifeCell : AbstractUICell<LifeCell, LifeCellState>
 
     protected override bool StateIsPermanent(LifeCellState state) => state.permanent;
 
-    private static readonly Color FURY_COLOR = Hex(170, 44, 22);
+    private static readonly Color FURY_COLOR = Hex(190, 64, 33);
     private static readonly Color LIFEBLOOD_COLOR = Hex(93, 183, 209);
     private static readonly Color HIVEBLOOD_COLOR = Hex(245, 153, 52);
     internal static readonly Color LIFE_COLOR = Hex(201, 233, 97);
@@ -65,11 +65,14 @@ internal class LifeCell : AbstractUICell<LifeCell, LifeCellState>
     private const float LIFEBLOOD_DRIP_TIME = 1.85f;
     private const float HIVEBLOOD_DRIP_PER_SEC = 21f;
     private const float HIVEBLOOD_DRIP_TIME = 1.35f;
+    private const float FURY_DRIP_PER_SEC = 75f;
+    private const float FURY_DRIP_TIME = 1.1f;
 
     private RandomFloatTicker healTicker = RatedTicker(HEAL_PARTICLES_PER_SEC);
     private RandomFloatTicker damageTicker = RatedTicker(DAMAGE_PARTICLES_PER_SEC);
     private RandomFloatTicker lifebloodDripTicker = RatedTicker(LIFEBLOOD_DRIP_PER_SEC);
     private RandomFloatTicker hivebloodDripTicker = RatedTicker(HIVEBLOOD_DRIP_PER_SEC);
+    private RandomFloatTicker furyDripTicker = RatedTicker(FURY_DRIP_PER_SEC);
 
     protected override void EmitParticles(float bodySize)
     {
@@ -84,6 +87,7 @@ internal class LifeCell : AbstractUICell<LifeCell, LifeCellState>
         {
             if (targetState.lifeblood) TickParticles(lifebloodDripTicker, Time.deltaTime, LIFEBLOOD_DRIP_TIME, LIFEBLOOD_COLOR, UICellParticleMode.Drip);
             if (targetState.fillState == LifeCellFillState.Healing) TickParticles(hivebloodDripTicker, Time.deltaTime, HIVEBLOOD_DRIP_TIME, HIVEBLOOD_COLOR, UICellParticleMode.Drip);
+            if (targetState.furied) TickParticles(furyDripTicker, Time.deltaTime, FURY_DRIP_TIME, FURY_COLOR, UICellParticleMode.Drip);
         }
     }
 }
@@ -115,7 +119,7 @@ internal class LifeHud : AbstractCellHud<LifeCell, LifeCellState>
         bool hiveblood = PlayerDataCache.Instance.HivebloodEquipped;
         bool hivebloodHealing = HivebloodWatcher.HivebloodHealing;
         bool jonis = pd.GetBool(nameof(PlayerData.equippedCharm_27));
-        bool furied = false;  // TODO: Handle fury
+        bool furied = PlayerDataCache.Instance.Furied;
 
         List<LifeCellState> cellStates = new();
         if (health == 0)
@@ -144,7 +148,6 @@ internal class LifeHud : AbstractCellHud<LifeCell, LifeCellState>
                 fillState = LifeCellFillState.Filled,
                 hiveblood = hiveblood,
                 lifeblood = true,
-                furied = furied,
             });
 
             if (hivebloodHealing) cellStates.Add(new()
@@ -152,7 +155,6 @@ internal class LifeHud : AbstractCellHud<LifeCell, LifeCellState>
                 fillState = LifeCellFillState.Healing,
                 lifeblood = true,
                 hiveblood = true,
-                furied = furied
             });
         }
         else
