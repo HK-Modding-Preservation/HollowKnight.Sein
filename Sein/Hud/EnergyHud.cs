@@ -29,16 +29,21 @@ internal class EnergyCell : AbstractUICell<EnergyCell, EnergyCellState>
 
     protected override EnergyCellState DefaultState() => new();
 
-    private static float SOUL_DRIP_RATE = 9f;
-    private static float SOUL_DRIP_TIME = 1.85f;
-    private static float SOUL_UNLOCK_RATE = 135;
-    private static float SOUL_UNLOCK_TIME = 0.6f;
 
+    private const float NEW_CELL_PARTICLES_PER_SEC = 125;
+    private const float NEW_CELL_PARTICLES_TIME = 0.35f;
+    private const float SOUL_DRIP_RATE = 9f;
+    private const float SOUL_DRIP_TIME = 1.85f;
+    private const float SOUL_UNLOCK_RATE = 135;
+    private const float SOUL_UNLOCK_TIME = 0.6f;
+
+    private RandomFloatTicker newCellTicker = RatedTicker(NEW_CELL_PARTICLES_PER_SEC);
     private RandomFloatTicker soulTicker = RatedTicker(SOUL_DRIP_RATE);
     private RandomFloatTicker unlockTicker = RatedTicker(SOUL_UNLOCK_RATE);
 
     protected override void EmitParticles(float cellSize, float bodySize)
     {
+        if (cellSize > 0 && cellSize < 1) TickParticles(newCellTicker, Time.deltaTime, NEW_CELL_PARTICLES_TIME, SOUL_COLOR, UICellParticleMode.Inwards);
         if (targetState.energy > 0 && targetState.fillState == EnergyCellFillState.Active) TickParticles(soulTicker, Time.deltaTime * targetState.energy / 33, SOUL_DRIP_TIME, SOUL_COLOR, UICellParticleMode.Drip);
         if (prevState.fillState != EnergyCellFillState.Active && targetState.fillState == EnergyCellFillState.Active)
             TickParticles(unlockTicker, Time.deltaTime, SOUL_UNLOCK_TIME, SOUL_COLOR, UICellParticleMode.Outwards);
