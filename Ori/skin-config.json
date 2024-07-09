@@ -7,9 +7,7 @@
   "detectAlts": false,
   "alternates": {
     "Knight.png": [
-      "Knight.png",
-      "Knight Dream Gate Cln.png",
-      "Knight Slug Cln.png"
+      "Knight.png"
     ],
     "Sprint.png": [
       "Sprint.png"
