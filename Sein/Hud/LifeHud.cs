@@ -63,8 +63,8 @@ internal class LifeCell : AbstractUICell<LifeCell, LifeCellState>
     private const float DAMAGE_PARTICLES_TIME = 0.2f;
     private const float LIFEBLOOD_DRIP_PER_SEC = 6.5f;
     private const float LIFEBLOOD_DRIP_TIME = 1.85f;
-    private const float HIVEBLOOD_DRIP_PER_SEC = 13f;
-    private const float HIVEBLOOD_DRIP_TIME = 1.25f;
+    private const float HIVEBLOOD_DRIP_PER_SEC = 21f;
+    private const float HIVEBLOOD_DRIP_TIME = 1.35f;
 
     private RandomFloatTicker healTicker = RatedTicker(HEAL_PARTICLES_PER_SEC);
     private RandomFloatTicker damageTicker = RatedTicker(DAMAGE_PARTICLES_PER_SEC);
