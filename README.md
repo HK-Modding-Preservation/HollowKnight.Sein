@@ -20,7 +20,7 @@ First, install [Custom Knight](https://prashantmohta.github.io/HollowKnight.Cust
 
 The Ori skin is stored in this repo but Github doesn't provide a way to download directories, use [this link](https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2Fdplochcoder%2FHollowKnight.Sein%2Ftree%2Fmain%2FOri) to download instead.  Unzip the resulting zip file into your Skins directory like any other Custom Knight skin.
 
-Finally, install this mod (Sein) via an HK mod installer such as [Lumafly](https://themulhima.github.io/Lumafly/).  It will turn on automatically when you switch to the Ori skin via Custom Knight, and disable itself if you select any other skin.
+Finally, install this mod (Sein) via an HK mod installer such as [Lumafly](https://themulhima.github.io/Lumafly/).  It will turn on automatically when you switch to the Ori skin (the skin folder must be named "Ori" exactly) via Custom Knight, and disable itself if you select any other skin.
 
 ## Credits
 
