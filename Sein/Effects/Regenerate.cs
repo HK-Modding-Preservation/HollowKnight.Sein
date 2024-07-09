@@ -103,7 +103,9 @@ internal class Regenerator : MonoBehaviour
         pos.x += X_OFFSET * Mathf.Sign(t.localScale.x);
         pos.y += Y_OFFSET;
 
-        float speedup = PlayerDataCache.Instance.QuickFocusEquipped ? QUICK_FOCUS_SPEEDUP : 1f;
+        float speedup = 1;
+        if (PlayerDataCache.Instance.QuickFocusEquipped) speedup *= QUICK_FOCUS_SPEEDUP;
+        if (PlayerDataCache.Instance.DeepFocusEquipped) speedup /= DEEP_FOCUS_SLOWDOWN;
         foreach (var elapsed in ticker.Tick(Time.deltaTime * speedup)) particleFactory.Launch(elapsed / speedup, pos);
     }
 }
