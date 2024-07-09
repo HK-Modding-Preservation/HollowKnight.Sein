@@ -1,3 +1,4 @@
+using CustomKnight;
 using ItemChanger.Internal.Menu;
 using Modding;
 using PurenailCore.ModUtil;
@@ -42,9 +43,23 @@ public class SeinMod : Mod, IGlobalSettings<SeinSettings>, ICustomMenuMod
     public SeinMod() : base("Sein")
     {
         _instance = this;
+
+        CustomKnight.CustomKnight.OnReady += (_, _) => SetOriEnabled();
+        SkinManager.OnSetSkin += (_, _) => SetOriEnabled();
     }
 
-    public static bool OriActive() => SkinWatcher.OriActive();
+    public static event Action? OnSkinChanged;
+
+    private static void SetOriEnabled()
+    {
+        var prev = OriEnabled;
+        OriEnabled = SkinManager.GetCurrentSkin().Exists("OriSkin.txt");
+        if (OriEnabled != prev) OnSkinChanged?.Invoke();
+    }
+
+    private static bool OriEnabled = false;
+
+    public static bool OriActive() => OriEnabled;
 
     public override void Initialize()
     {
@@ -56,7 +71,6 @@ public class SeinMod : Mod, IGlobalSettings<SeinSettings>, ICustomMenuMod
         Orb.Hook();
         PlayerDataCache.Hook();
         Regenerate.Hook();
-        SkinWatcher.Hook();
     }
 
     public static SeinSettings GS { get; private set; } = new();

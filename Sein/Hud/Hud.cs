@@ -34,8 +34,9 @@ internal class Hud : PersistentMonoBehaviour
         oriHud.transform.position = LIVE_OFFSET + HIDE_OFFSET + SLIDE_OUT_OFFSET;
         oriHud.layer = gameObject.layer;
 
-        UpdateOriState(SkinWatcher.OriActive());
-        SkinWatcher.OnSkinToggled += UpdateOriState;
+        UpdateOriState();
+
+        SeinMod.OnSkinChanged += UpdateOriState;
         SeinSettings.OnSettingsChanged += SettingsChanged;
 
         // Local position center
@@ -62,7 +63,7 @@ internal class Hud : PersistentMonoBehaviour
 
     protected override void OnDestroy()
     {
-        SkinWatcher.OnSkinToggled -= UpdateOriState;
+        SeinMod.OnSkinChanged -= UpdateOriState;
         SeinSettings.OnSettingsChanged -= SettingsChanged;
 
         Destroy(oriHud);
@@ -71,11 +72,11 @@ internal class Hud : PersistentMonoBehaviour
 
     private bool isOriActive = false;
 
-    private void SettingsChanged(SeinSettings settings) => UpdateOriState(SkinWatcher.OriActive());
+    private void SettingsChanged(SeinSettings settings) => UpdateOriState();
 
-    private void UpdateOriState(bool oriActive)
+    private void UpdateOriState()
     {
-        oriActive &= SeinSettings.Instance.EnableHud;
+        bool oriActive = SeinMod.OriActive() && SeinSettings.Instance.EnableHud;
         if (isOriActive == oriActive) return;
 
         isOriActive = oriActive;
