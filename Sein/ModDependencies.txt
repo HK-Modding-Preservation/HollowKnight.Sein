@@ -4,3 +4,4 @@ FrogCore
 ItemChanger
 PurenailCore
 SFCore
+Satchel

@@ -47,8 +47,9 @@
     <None Remove="README.md" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Resources\**\*.png" />
-    <EmbeddedResource Include="Resources\**\*.wav" />
+    <EmbeddedResource Include="Resources\Skin\**" />
+    <EmbeddedResource Include="Resources\Sounds\*.wav" />
+    <EmbeddedResource Include="Resources\Sprites\*.png" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="Assembly-CSharp">
@@ -104,6 +105,9 @@
     </Reference>
     <Reference Include="PurenailCore">
       <HintPath>$(HollowKnightRefs)/Mods/PurenailCore/PurenailCore.dll</HintPath>
+    </Reference>
+    <Reference Include="Satchel">
+      <HintPath>$(HollowKnightRefs)/Mods/Satchel/Satchel.dll</HintPath>
     </Reference>
     <Reference Include="SFCore">
       <HintPath>$(HollowKnightRefs)/Mods/SFCore/SFCore.dll</HintPath>
