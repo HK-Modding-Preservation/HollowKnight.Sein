@@ -13,7 +13,7 @@ public class DataUpdater
         modDir.Create();
 
         var root = InferGitRoot(Directory.GetCurrentDirectory());
-        var sourcePath = Path.Combine(root, "Ori");
+        var sourcePath = Path.Combine(root, "Sein\\Resources\\Skin");
 
         FixSpriteSheets(sourcePath);
         CopyAllFiles(sourcePath, modPath);
