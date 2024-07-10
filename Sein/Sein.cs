@@ -1,5 +1,4 @@
 using CustomKnight;
-using CustomKnightSuperAnimationAddon;
 using ItemChanger.Internal.Menu;
 using Modding;
 using PurenailCore.ModUtil;
@@ -14,12 +13,12 @@ namespace Sein;
 
 public record SeinSettings
 {
-    public static event Action<SeinSettings> OnSettingsChanged;
+    public static event Action<SeinSettings>? OnSettingsChanged;
     public static void UpdateSettings() => OnSettingsChanged?.Invoke(Instance);
 
     public static SeinSettings Instance => SeinMod.GS;
 
-    public string SkinDisplayName = "Ori";
+    public string SkinId = "Ori";
     public bool EnableHud = true;
     public bool EnableSein = true;
     public bool EnableGeoSounds = true;
@@ -28,59 +27,46 @@ public record SeinSettings
 
 public class OriSkin : ISelectableSkin
 {
-    public static OriSkin Instance { get; private set; } = new();
-
-    private Dictionary<string, byte[]> files = new();
-    private Dictionary<string, Texture2D> textures = new();
-
     private const string SkinResourcePrefix = "Sein.Resources.Skin.";
 
-    private static string FixLocalName(string name)
-    {
-        var parts = name.Split('.');
+    public static OriSkin Instance { get; private set; } = new();
 
-        List<string> fixedParts = new();
-        for (int i = 0; i < parts.Length - 2; i++) fixedParts.Add(parts[i].Replace('_', ' '));
-        fixedParts.Add(parts[parts.Length - 2]);
-
-        return $"{string.Join("/", fixedParts)}.{parts[parts.Length - 1]}";
-    }
+    private HashSet<string> resourceNames = new();
 
     private OriSkin()
     {
-        var asm = typeof(OriSkin).Assembly;
-
-        foreach (var name in asm.GetManifestResourceNames())
+        foreach (var name in typeof(OriSkin).Assembly.GetManifestResourceNames())
         {
             if (!name.StartsWith(SkinResourcePrefix)) continue;
 
-            var localName = FixLocalName(name.Substring(SkinResourcePrefix.Length));
-
-            if (localName.EndsWith(".png")) textures[localName] = Satchel.AssemblyUtils.GetTextureFromResources(name);
-            files[localName] = Satchel.AssemblyUtils.GetBytesFromResources(name);
+            var localName = name.Substring(SkinResourcePrefix.Length);
+            resourceNames.Add(localName);
         }
     }
 
+    private static string ConvertFilename(string name) => name.Replace('/', '.').Replace('\\', '.').Replace(' ', '_');
 
-    public bool Exists(string FileName) => files.ContainsKey(FileName) || textures.ContainsKey(FileName);
+    private static string GetResourceName(string name) => $"{SkinResourcePrefix}{ConvertFilename(name)}";
+
+    public bool Exists(string FileName) => resourceNames.Contains(ConvertFilename(FileName));
 
     public string GetCinematicUrl(string CinematicName) => "";
 
-    public byte[] GetFile(string FileName) => files[FileName];
+    public byte[] GetFile(string FileName) => Satchel.AssemblyUtils.GetBytesFromResources(GetResourceName(FileName));
 
-    public string GetId() => "SeinMod-Ori";
+    public string GetId() => SeinSettings.Instance.SkinId;
 
-    public string GetName() => SeinSettings.Instance.SkinDisplayName;
+    public string GetName() => SeinSettings.Instance.SkinId;
 
     public string getSwapperPath() => "";
 
-    public Texture2D GetTexture(string FileName) => textures[FileName];
+    public Texture2D GetTexture(string FileName) => Satchel.AssemblyUtils.GetTextureFromResources(GetResourceName(FileName));
 
     public bool HasCinematic(string CinematicName) => false;
 
     public bool hasSwapper() => false;
 
-    public bool shouldCache() => true;
+    public bool shouldCache() => false;
 }
 
 public class SeinMod : Mod, IGlobalSettings<SeinSettings>, ICustomMenuMod
@@ -106,6 +92,7 @@ public class SeinMod : Mod, IGlobalSettings<SeinSettings>, ICustomMenuMod
         _instance = this;
 
         CustomKnight.CustomKnight.OnInit += (_, _) => SkinManager.AddSkin(OriSkin.Instance);
+        CustomKnight.CustomKnight.OnReady += (_, _) => SetOriEnabled();
         SkinManager.OnSetSkin += (_, _) => SetOriEnabled();
     }
 
