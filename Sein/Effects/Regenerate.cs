@@ -14,14 +14,14 @@ internal class RegenerateParticleFactory : AbstractParticleFactory<RegeneratePar
 
     protected override Sprite GetSprite() => sprite.Value;
 
-    public void Launch(float prewarm, Vector3 dest)
+    public void Launch(float prewarm, Transform parent, Vector3 dest)
     {
         float lifetime = LIFETIME;
         if (PlayerDataCache.Instance.QuickFocusEquipped) lifetime /= Regenerator.QUICK_FOCUS_SPEEDUP;
         if (PlayerDataCache.Instance.DeepFocusEquipped) lifetime *= Regenerator.DEEP_FOCUS_SLOWDOWN;
         if (!Launch(prewarm, lifetime, out var particle)) return;
 
-        particle.SetParams(dest);
+        particle.SetParams(parent, dest);
         particle.Finalize(prewarm);
     }
 }
@@ -40,7 +40,9 @@ internal class RegenerateParticle : AbstractParticle<RegenerateParticleFactory, 
     private Vector3 radial;
     private float scaleBase;
 
-    internal void SetParams(Vector3 center)
+    protected override bool UseLocalPos => true;
+
+    internal void SetParams(Transform parent, Vector3 center)
     {
         this.center = center;
         this.rotBase = Random.Range(0, 360f);
@@ -49,6 +51,9 @@ internal class RegenerateParticle : AbstractParticle<RegenerateParticleFactory, 
         var angle = Random.Range(0, 360f);
         this.radial = center + Quaternion.Euler(0, 0, angle) * new Vector3(radius, 0, 0);
         this.scaleBase = PlayerDataCache.Instance.DeepFocusEquipped ? DEEP_FOCUS_SCALE_BASE : SCALE_BASE;
+
+        transform.SetParent(parent);
+        transform.localPosition = this.radial;
     }
 
     protected override float GetAlpha()
@@ -99,14 +104,12 @@ internal class Regenerator : MonoBehaviour
         if (!particlesEnabled) return;
 
         var t = heroController.gameObject.transform;
-        var pos = t.position;
-        pos.x += X_OFFSET * Mathf.Sign(t.localScale.x);
-        pos.y += Y_OFFSET;
+        Vector3 pos = new(X_OFFSET * Mathf.Sign(t.localScale.x), Y_OFFSET, 0);
 
         float speedup = 1;
         if (PlayerDataCache.Instance.QuickFocusEquipped) speedup *= QUICK_FOCUS_SPEEDUP;
         if (PlayerDataCache.Instance.DeepFocusEquipped) speedup /= DEEP_FOCUS_SLOWDOWN;
-        foreach (var elapsed in ticker.Tick(Time.deltaTime * speedup)) particleFactory.Launch(elapsed / speedup, pos);
+        foreach (var elapsed in ticker.Tick(Time.deltaTime * speedup)) particleFactory.Launch(elapsed / speedup, t, pos);
     }
 }
 
