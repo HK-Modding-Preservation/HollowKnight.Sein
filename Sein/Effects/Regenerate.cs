@@ -87,11 +87,13 @@ internal class Regenerator : MonoBehaviour
     private const float PARTICLE_RATE = 65f;
     private const float X_OFFSET = 0.27f;
     private const float Y_OFFSET = 0.38f;
+    private const float DELAY = 0.1f;
 
     private RegenerateParticleFactory particleFactory = new();
     private RandomFloatTicker ticker = new(0.8f / PARTICLE_RATE, 1.2f / PARTICLE_RATE);
     private HeroController? heroController;
-    private bool particlesEnabled;
+    private bool particlesEnabled = false;
+    private float lastEnabled = DELAY;
 
     internal void SetEnabled(HeroController heroController, bool particlesEnabled)
     {
@@ -101,7 +103,10 @@ internal class Regenerator : MonoBehaviour
 
     private void Update()
     {
-        if (!particlesEnabled) return;
+        if (!particlesEnabled && lastEnabled >= DELAY) return;
+
+        if (particlesEnabled) lastEnabled = 0;
+        else lastEnabled += Time.deltaTime;
 
         var t = heroController.gameObject.transform;
         Vector3 pos = new(X_OFFSET * Mathf.Sign(t.localScale.x), Y_OFFSET, 0);
