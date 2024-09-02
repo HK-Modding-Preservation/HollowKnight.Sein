@@ -7,7 +7,7 @@ namespace Sein.Hud;
 
 internal class EssenceHud : MonoBehaviour
 {
-    private static readonly IC.EmbeddedSprite sprite = new("Essence");
+    private static readonly IC.EmbeddedSprite sprite = new("essence");
 
     private GameObject spriteObj;
     private SpriteRenderer spriteRenderer;

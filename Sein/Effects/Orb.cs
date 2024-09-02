@@ -10,7 +10,7 @@ internal class OrbParticleFactory : AbstractParticleFactory<OrbParticleFactory, 
     private static float NOISE = 0.25f;
     private static float Z_OFFSET = -0.01f;
 
-    private static IC.EmbeddedSprite sprite = new("SeinParticle");
+    private static IC.EmbeddedSprite sprite = new("seinparticle");
 
     protected override string GetObjectName() => "SeinParticle";
 
@@ -47,7 +47,7 @@ internal class Orb : MonoBehaviour
 {
     public static void Hook() => SceneHooks.Hook(InstantiateOrb);
 
-    private static IC.EmbeddedSprite SeinSprite = new("Sein");
+    private static IC.EmbeddedSprite SeinSprite = new("seinorb");
 
     private static void InstantiateOrb(bool oriEnabled, SeinSettings settings)
     {

@@ -8,7 +8,7 @@ internal class RegenerateParticleFactory : AbstractParticleFactory<RegeneratePar
 {
     private const float LIFETIME = 0.45f;
 
-    private static IC.EmbeddedSprite sprite = new("RegenerateParticle");
+    private static IC.EmbeddedSprite sprite = new("regenerateparticle");
 
     protected override string GetObjectName() => "RegenerateParticle";
 

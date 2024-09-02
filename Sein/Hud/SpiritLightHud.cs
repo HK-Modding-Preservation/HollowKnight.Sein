@@ -9,7 +9,7 @@ namespace Sein.Hud;
 
 internal class SpiritLightFrameParticleFactory : UIParticleFactory<SpiritLightFrameParticleFactory, SpiritLightFrameParticle>
 {
-    private static readonly EmbeddedSprite sprite = new("SpiritLightFrameParticle");
+    private static readonly EmbeddedSprite sprite = new("spiritlightframeparticle");
 
     protected override string GetObjectName() => "SpiritLightFrameParticle";
 
@@ -60,7 +60,7 @@ internal class SpiritLightFrameParticle : AbstractParticle<SpiritLightFrameParti
 
 internal class SpiritLightParticleFactory : UIParticleFactory<SpiritLightParticleFactory, SpiritLightParticle>
 {
-    private static readonly EmbeddedSprite sprite = new("SpiritLightParticle");
+    private static readonly EmbeddedSprite sprite = new("spiritlightparticle");
 
     protected override string GetObjectName() => "SpiritLightParticle";
 
@@ -161,8 +161,8 @@ internal class SpiritParticleUpdater
 
 internal class SpiritLightHud : MonoBehaviour
 {
-    private static readonly EmbeddedSprite hudSprite = new("SpiritLightHud");
-    private static readonly EmbeddedSprite lightSprite = new("SpiritLightOrb");
+    private static readonly EmbeddedSprite hudSprite = new("spiritlighthud");
+    private static readonly EmbeddedSprite lightSprite = new("spiritlightorb");
 
     private GeoCounter geoCounter;
     private TextMesh realGeoText;

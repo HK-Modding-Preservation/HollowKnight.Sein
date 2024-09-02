@@ -6,7 +6,7 @@ namespace Sein.Effects;
 
 internal class FlashParticleFactory : AbstractParticleFactory<FlashParticleFactory, FlashParticle>
 {
-    private static IC.EmbeddedSprite sprite = new("SpiritLightFrameParticle");
+    private static IC.EmbeddedSprite sprite = new("spiritlightframeparticle");
 
     protected override string GetObjectName() => "FlashParticle";
 
