@@ -1,4 +1,4 @@
-﻿using Sein.Util;
+﻿using PurenailCore.GOUtil;
 using UnityEngine;
 
 namespace Sein.Effects;
