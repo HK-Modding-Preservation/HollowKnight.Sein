@@ -2,6 +2,6 @@ Custom Knight
 CustomKnightSuperAnimationAddon
 FrogCore
 ItemChanger
-PurenailCore
+PurenailCore from https://github.com/dplochcoder/HollowKnight.PurenailCore/releases/download/v1.2.4.0/PurenailCore.zip
 SFCore
 Satchel
